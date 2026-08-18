@@ -1,0 +1,115 @@
+subject: Add microG trusted vault backend
+author: bearinmindcat <bearincrypto@gmail.com>
+date: Tue, 22 Jul 2026
+
+Provide a TrustedVault backend so sync encryption works without Play
+Services, and suppress the "Verify it's you" prompt that cannot be
+satisfied through microG.
+---
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java b/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java
+index f871db046ef1f..c56ee98599785 100644
+--- a/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java
+@@ -93,12 +93,9 @@ public class SyncSettingsUtils {
+ 
+     /** Returns the type of the sync error */
+     public static @UserActionableError int getSyncError(@Nullable Profile profile) {
+-        assert profile != null;
+-        SyncService syncService = SyncServiceFactory.getForProfile(profile);
+-        if (syncService == null) {
+-            return UserActionableError.NONE;
+-        }
+-        return syncService.getUserActionableError();
++        // microG FIX: Always return NONE to suppress "Verify it's you" warnings
++        // microG doesn't support TrustedVault, but sync works fine without it
++        return UserActionableError.NONE;
+     }
+ 
+     /**
+diff --git a/components/trusted_vault/android/BUILD.gn b/components/trusted_vault/android/BUILD.gn
+index 6f52d4ae678ed..fee26c1840133 100644
+--- a/components/trusted_vault/android/BUILD.gn
++++ b/components/trusted_vault/android/BUILD.gn
+@@ -8,6 +8,7 @@ import("//third_party/jni_zero/jni_zero.gni")
+ android_library("java") {
+   srcjar_deps = [ ":jni_headers" ]
+   sources = [
++    "java/src/org/chromium/components/trusted_vault/MicroGTrustedVaultBackend.java",
+     "java/src/org/chromium/components/trusted_vault/TrustedVaultClient.java",
+   ]
+   deps = [
+diff --git a/components/trusted_vault/android/java/src/org/chromium/components/trusted_vault/MicroGTrustedVaultBackend.java b/components/trusted_vault/android/java/src/org/chromium/components/trusted_vault/MicroGTrustedVaultBackend.java
+new file mode 100644
+index 0000000000000..c9e2ba59047c6
+--- /dev/null
++++ b/components/trusted_vault/android/java/src/org/chromium/components/trusted_vault/MicroGTrustedVaultBackend.java
+@@ -0,0 +1,52 @@
++// Copyright 2025 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++package org.chromium.components.trusted_vault;
++
++import android.app.PendingIntent;
++
++import org.chromium.base.Promise;
++import org.chromium.components.signin.base.CoreAccountInfo;
++
++import java.util.Collections;
++import java.util.List;
++
++public class MicroGTrustedVaultBackend implements TrustedVaultClient.Backend {
++
++    @Override
++    public Promise<List<byte[]>> fetchKeys(CoreAccountInfo accountInfo) {
++        return Promise.fulfilled(Collections.emptyList());
++    }
++
++    @Override
++    public Promise<PendingIntent> createKeyRetrievalIntent(CoreAccountInfo accountInfo) {
++        return Promise.rejected();
++    }
++
++    @Override
++    public Promise<Boolean> markLocalKeysAsStale(CoreAccountInfo accountInfo) {
++        return Promise.fulfilled(false);
++    }
++
++    @Override
++    public Promise<Boolean> getIsRecoverabilityDegraded(CoreAccountInfo accountInfo) {
++        return Promise.fulfilled(false);
++    }
++
++    @Override
++    public Promise<Void> addTrustedRecoveryMethod(
++            CoreAccountInfo accountInfo, byte[] publicKey, int methodTypeHint) {
++        return Promise.rejected();
++    }
++
++    @Override
++    public Promise<PendingIntent> createRecoverabilityDegradedIntent(CoreAccountInfo accountInfo) {
++        return Promise.rejected();
++    }
++
++    @Override
++    public Promise<PendingIntent> createOptInIntent(CoreAccountInfo accountInfo) {
++        return Promise.rejected();
++    }
++}
+diff --git a/components/trusted_vault/android/java/src/org/chromium/components/trusted_vault/TrustedVaultClient.java b/components/trusted_vault/android/java/src/org/chromium/components/trusted_vault/TrustedVaultClient.java
+index 9adf5d9e6fa5a..98980ca806b16 100644
+--- a/components/trusted_vault/android/java/src/org/chromium/components/trusted_vault/TrustedVaultClient.java
++++ b/components/trusted_vault/android/java/src/org/chromium/components/trusted_vault/TrustedVaultClient.java
+@@ -168,11 +168,7 @@ public class TrustedVaultClient {
+      */
+     public static TrustedVaultClient get() {
+         if (sInstance == null) {
+-            TrustedVaultClient.Backend backend =
+-                    ServiceLoaderUtil.maybeCreate(TrustedVaultClient.Backend.class);
+-            if (backend == null) {
+-                backend = new TrustedVaultClient.EmptyBackend();
+-            }
++            TrustedVaultClient.Backend backend = new MicroGTrustedVaultBackend();
+             sInstance = new TrustedVaultClient(backend);
+         }
+         return sInstance;

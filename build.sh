@@ -73,7 +73,7 @@ if [[ "$ARCH" != "arm64" ]] && [[ "$ARCH" != "arm" ]] && [[ "$ARCH" != "x86" ]];
     exit 4
 fi
 
-if [[ "$TARGET" != "chrome_modern_target" ]] && [[ "$TARGET" != "trichrome_chrome_apk_target" ]] && [[ "$TARGET" != "webview_target" ]] && [[ "$TARGET" != "trichrome_webview_target" ]] && [[ "$TARGET" != "all" ]]; then
+if [[ "$TARGET" != "chrome_modern_target" ]] && [[ "$TARGET" != "chrome_public_apk_target" ]] && [[ "$TARGET" != "trichrome_chrome_apk_target" ]] && [[ "$TARGET" != "webview_target" ]] && [[ "$TARGET" != "trichrome_webview_target" ]] && [[ "$TARGET" != "all" ]]; then
     echo "Wrong target"
     exit 5
 fi
@@ -260,7 +260,33 @@ if [ "$RESUME" != y ]; then
 
   # Ignore the pruning error
   python3 ungoogled-chromium/utils/prune_binaries.py src ungoogled-chromium/pruning.list --keep-contingent-paths || true
-  python3 ungoogled-chromium/utils/patches.py apply src ungoogled-chromium/patches
+  for _p in disable-gaia.patch disable-gcm.patch; do
+  if grep -qE "^[^#].*${_p}$" ungoogled-chromium/patches/series; then
+    sed -i "s|^\(.*${_p}\)$|#\1|" ungoogled-chromium/patches/series
+    echo "microG: disabled core/${_p}"
+  fi
+done
+python3 ungoogled-chromium/utils/patches.py apply src ungoogled-chromium/patches
+
+# microG: sign-in and sync must reach REAL Google endpoints. ungoogled's domain
+# substitution rewrites googleapis.com -> 9oo91eapis.qjz9zk inside the Gaia auth
+# and sync code, which breaks both halves of microG sync:
+#   * GoogleAuthUtil is asked for a token scoped to
+#     https://www.9oo91eapis.qjz9zk/auth/userinfo.email -- a domain that cannot
+#     resolve -- so every getAccessToken returns NETWORK_ERROR and sign-in hangs
+#     on "Signing in...".
+#   * components/sync/base/sync_util.h points the sync server at
+#     https://clients4.9oo91e.qjz9zk/chrome-sync.
+# Drop those files from the substitution lists so they keep real domains. The
+# rest of the tree stays substituted, so ungoogled's posture is unchanged
+# everywhere except the auth path we deliberately re-enable.
+_mg_desub='^(google_apis/gaia/|google_apis/google_api_keys\.|components/signin/|components/sync/)'
+for _sl in ungoogled-chromium/domain_substitution.list "${substitution_list_2:-domain_sub_2.list}"; do
+  [ -f "$_sl" ] || continue
+  _n0=$(wc -l < "$_sl")
+  sed -i -E "\%${_mg_desub}%d" "$_sl"
+  echo "microG: kept $(( _n0 - $(wc -l < "$_sl") )) auth/sync files out of domain substitution ($_sl)"
+done
   python3 ungoogled-chromium/utils/domain_substitution.py apply -r ungoogled-chromium/domain_regex.list -f ungoogled-chromium/domain_substitution.list -c ${cache_file} src
 
   # Additional Source Patches
@@ -286,6 +312,35 @@ if [ "$RESUME" != y ]; then
       components/signin/public/base/signin_pref_names.cc \
       components/safe_browsing/core/common/safe_browsing_prefs.h \
       components/safe_browsing/core/common/safe_browsing_prefs.cc 2>/dev/null ) || true
+( cd src && git checkout HEAD -- \
+    components/signin/internal/identity_manager/primary_account_manager.cc \
+    components/signin/internal/identity_manager/account_tracker_service.cc \
+    components/signin/internal/identity_manager/profile_oauth2_token_service.cc \
+    components/signin/internal/identity_manager/primary_account_mutator_impl.cc \
+    components/signin/public/base/signin_prefs.cc \
+    components/signin/public/base/BUILD.gn 2>/dev/null ) || true
+
+while read -r _mp; do
+  case "$_mp" in ''|'#'*) continue;; esac
+  _f="patches/MicroG/$_mp"
+  [ -f "$_f" ] || { echo "FATAL: missing microG patch: $_mp"; exit 1; }
+  if   ( cd src && git apply --whitespace=nowarn "../$_f" ) 2>/dev/null; then echo "microG: applied $_mp"
+  elif ( cd src && git apply --3way --whitespace=nowarn "../$_f" ) 2>/dev/null; then echo "microG: applied 3way $_mp"
+  elif ( cd src && patch -p1 --forward --no-backup-if-mismatch -i "../$_f" >/tmp/mg.out 2>&1 ); then echo "microG: applied patch $_mp"
+  else tail -5 /tmp/mg.out 2>/dev/null; echo "FATAL: microG patch failed: $_mp"; exit 1; fi
+done < patches/MicroG/series
+
+[ -f src/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java ] \
+  || { echo "FATAL: microG delegate missing"; exit 1; }
+grep -q "app.revanced" src/chrome/android/java/AndroidManifest.xml \
+  || { echo "FATAL: manifest spoofing missing"; exit 1; }
+grep -q "is_signin_allowed = pref_service_->GetBoolean" \
+  src/components/signin/internal/identity_manager/primary_account_mutator_impl.cc \
+  || { echo "FATAL: signin gate hardcoded false"; exit 1; }
+grep -q '"signin_pref_names.cc"' src/components/signin/public/base/BUILD.gn \
+  || { echo "FATAL: signin_pref_names.cc not in BUILD"; exit 1; }
+echo "microG: layer verified"
+
 
   ## Configure output folder
   export PATH=$OLD_PATH  # remove depot_tools from PATH
@@ -299,7 +354,16 @@ if [ "$RESUME" != y ]; then
   else
       cat ../android_flags.gn ../android_flags.debug.gn > "${output_folder}"/args.gn
   fi
-  printf '\ntarget_cpu="'"$ARCH"'"\n' >> "${output_folder}"/args.gn
+  
+if [ -n "${GOOGLE_DEFAULT_CLIENT_ID:-}" ] && [ -n "${GOOGLE_DEFAULT_CLIENT_SECRET:-}" ]; then
+  printf '\ngoogle_default_client_id = "%s"\n'     "$GOOGLE_DEFAULT_CLIENT_ID"     >> "${output_folder}"/args.gn
+  printf 'google_default_client_secret = "%s"\n'    "$GOOGLE_DEFAULT_CLIENT_SECRET" >> "${output_folder}"/args.gn
+  [ -n "${GOOGLE_API_KEY:-}" ] && printf 'google_api_key = "%s"\n' "$GOOGLE_API_KEY" >> "${output_folder}"/args.gn
+  echo "microG: OAuth credentials injected from environment"
+else
+  echo "microG: using OAuth credentials from android_flags.release.gn"
+fi
+printf '\ntarget_cpu="'"$ARCH"'"\n' >> "${output_folder}"/args.gn
   # Trichrome doesn't forward version_name to base in bundle
   printf '\nandroid_override_version_name="'"${chromium_version}"'"\n' >> "${output_folder}"/args.gn
 

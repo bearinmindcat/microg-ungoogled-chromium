@@ -1,0 +1,7 @@
+Add-microG-account-manager-delegate.patch
+Add-signin-manager-email-fallback.patch
+Add-microG-trusted-vault-backend.patch
+Fix-native-account-consistency-for-microG.patch
+Add-package-signature-spoofing-to-manifest.patch
+Add-native-image-decoder-for-profile-icons.patch
+Change-package-name-to-microg.patch

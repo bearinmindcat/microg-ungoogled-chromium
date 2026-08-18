@@ -1,0 +1,39 @@
+subject: Change package name to microG variant
+author: bearinmindcat <bearincrypto@gmail.com>
+date: Tue, 22 Jul 2026
+
+Append .microg to the package name so this build installs alongside the stock
+ungoogled-chromium-android build instead of replacing it, and rename the app so
+the two are distinguishable in the launcher.
+
+The channel suffix is applied first, so the result is
+org.ungoogled.chromium.stable.microg.
+
+This does not affect microG itself: the token request identifies this app by the
+app.revanced.android.gms.SPOOFED_PACKAGE_NAME meta-data (com.android.chrome), not
+by the real package name. Note that microG grants signature spoofing per app, so
+after a rename the new package needs spoofing enabled in microG settings again.
+---
+--- a/chrome/android/chrome_public_apk_tmpl.gni
++++ b/chrome/android/chrome_public_apk_tmpl.gni
+@@ -29,6 +29,7 @@ declare_args() {
+   if (use_stable_package_name_for_trichrome) {
+     chrome_public_manifest_package += ".stable"
+   } else if (android_channel != "default") {
+     chrome_public_manifest_package += "." + android_channel
+   }
++  chrome_public_manifest_package += ".microg"
+ }
+ 
+ chrome_public_test_manifest_package = "org.ungoogled.chromium.tests"
+--- a/chrome/android/java/res_chromium_base/values/channel_constants.xml
++++ b/chrome/android/java/res_chromium_base/values/channel_constants.xml
+@@ -7,7 +7,7 @@
+ 
+ <resources xmlns:android="http://schemas.android.com/apk/res/android">
+     <!-- The application name displayed to the user. -->
+-    <string name="app_name" translatable="false">Ungoogled Chromium</string>
++    <string name="app_name" translatable="false">Ungoogled Chromium microG</string>
+     <string name="bookmark_widget_title" translatable="false">Chromium bookmarks</string>
+     <string name="search_widget_title" translatable="false">Chromium search</string>
+     <string name="quick_action_search_widget_title" translatable="false">Chromium quick action search</string>

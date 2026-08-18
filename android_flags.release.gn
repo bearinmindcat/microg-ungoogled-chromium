@@ -6,3 +6,8 @@ is_component_build=false
 is_debug=false
 is_official_build=true
 symbol_level=1
+
+google_default_client_id = "77185425430.apps.googleusercontent.com"
+google_default_client_secret = "OTJgUOQcT7lO7GsGZq2G4IlT"
+libyuv_use_sme = false
+libyuv_use_sve = false

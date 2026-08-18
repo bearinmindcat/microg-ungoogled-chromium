@@ -1,0 +1,27 @@
+subject: Add signin manager email fallback
+author: bearinmindcat <bearincrypto@gmail.com>
+date: Tue, 22 Jul 2026
+
+Match accounts by email as well as Gaia ID. microG issues a different
+Gaia ID than Google does, and without this the account is dropped on
+restart and sign-in does not persist.
+---
+diff --git a/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java b/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
+index 31ac0eba8b42e..843be51f3da02 100644
+--- a/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
++++ b/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
+@@ -179,6 +179,14 @@ class SigninManagerImpl implements SigninManager, AccountsChangeObserver {
+                     accounts, CoreAccountInfo.getIdFrom(primaryAccountInfo));
+             return;
+         }
++        // PATCH: For microG accounts, Gaia ID from stored account may differ from device accounts.
++        // Fall back to email matching to prevent sign-out when using fake/mismatched Gaia IDs.
++        if (AccountUtils.findAccountByEmail(accounts, primaryAccountInfo.getEmail()) != null) {
++            Log.i(TAG, "Primary account Gaia ID mismatch, but email found - keeping signed in (microG workaround)");
++            seedThenReloadAllAccountsFromSystem(
++                    accounts, CoreAccountInfo.getIdFrom(primaryAccountInfo));
++            return;
++        }
+         if (isOperationInProgress()) {
+             // Re-check whether there's still a primary account after the current operation.
+             runAfterOperationInProgress(this::onCoreAccountInfosChanged);

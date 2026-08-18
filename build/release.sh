@@ -33,6 +33,27 @@ if [ -z "$APK_IN" ] && [ -n "$AAB_IN" ]; then
 fi
 [ -n "$APK_IN" ] || { echo "FATAL: no ChromePublic.apk and no bundle to derive one from"; exit 1; }
 
+# microG: rewrite the GoogleAuthUtil GMS package string in the DEX before signing.
+# GoogleAuthUtil ships in a prebuilt Play Services AAR, so this cannot be a source patch.
+# Must run BEFORE signing -- editing classes.dex invalidates any existing signature.
+# Both artifacts need it: the .apk we ship AND the .aab, which is signed separately
+# below from AAB_IN. Patching only the APK would publish a bundle whose GoogleAuthUtil
+# still points at real GMS, so anything installed from it has broken sign-in - silently.
+if [ -x microg/apply_microg_smali_patch.sh ]; then
+    for _mg_in in "$APK_IN" "$AAB_IN"; do
+        [ -n "$_mg_in" ] && [ -f "$_mg_in" ] || continue
+        echo "microG: applying smali redirect to $_mg_in"
+        _mg_out="${_mg_in}.microg"
+        if microg/apply_microg_smali_patch.sh "$_mg_in" "$_mg_out" --no-sign; then
+            mv -f "$_mg_out" "$_mg_in"
+            echo "microG: smali redirect applied to $(basename "$_mg_in")"
+        else
+            rm -f "$_mg_out"
+            echo "FATAL: microG smali redirect failed on $_mg_in"; exit 1
+        fi
+    done
+fi
+
 KS="${UGC_KEYSTORE:-}"
 KS_ALIAS="${UGC_KEYSTORE_ALIAS:-key0}"
 KS_PASSFILE="${UGC_KEYSTORE_PASSFILE:-}"

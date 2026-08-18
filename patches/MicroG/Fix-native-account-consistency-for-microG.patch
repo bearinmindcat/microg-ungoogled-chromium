@@ -1,0 +1,182 @@
+subject: Fix native account consistency for microG
+author: bearinmindcat <bearincrypto@gmail.com>
+date: Tue, 22 Jul 2026
+
+Keep the account reconcilor, cookie manager, multilogin helper and auth
+fetcher consistent when tokens are issued by microG rather than GMS.
+---
+diff --git a/components/signin/core/browser/account_reconcilor.cc b/components/signin/core/browser/account_reconcilor.cc
+index 4b25e6f9f513e..9fdad89a6d329 100644
+--- a/components/signin/core/browser/account_reconcilor.cc
++++ b/components/signin/core/browser/account_reconcilor.cc
+@@ -194,10 +194,13 @@ void AccountReconcilor::Initialize(bool start_reconcile_if_tokens_available) {
+ }
+ 
+ void AccountReconcilor::EnableReconcile() {
++  LOG(WARNING) << "AccountReconcilor::EnableReconcile called";
+   RegisterWithAllDependencies();
+   if (IsIdentityManagerReady()) {
++    LOG(WARNING) << "AccountReconcilor: IdentityManager ready, calling StartReconcile with kEnableReconcile";
+     StartReconcile(Trigger::kEnableReconcile);
+   } else {
++    LOG(WARNING) << "AccountReconcilor: IdentityManager NOT ready, scheduling";
+     SetState(AccountReconcilorState::kScheduled);
+   }
+ }
+@@ -445,9 +448,17 @@ void AccountReconcilor::StartReconcile(Trigger trigger) {
+     return;
+   }
+ 
+-  // In the case of a forced reconciliation, we will not rely on ListAccounts,
+-  // and consider the cookie jar to be empty.
+-  if (trigger_ == Trigger::kForcedReconcile) {
++  // In the case of a forced reconciliation or when enabling reconcile (sign-in),
++  // we will not rely on ListAccounts, and consider the cookie jar to be empty.
++  // PATCH: Also include kEnableReconcile to fix re-sign-in with microG.
++  // Without this, cached ListAccounts data would make the reconciler think
++  // cookies are already set, skipping the Multilogin call needed for
++  // google.com/youtube.com sign-in.
++  LOG(WARNING) << "AccountReconcilor::StartReconcile: trigger=" << static_cast<int>(trigger_)
++               << " (0=kUnknown, 1=kTokenChange, 2=kCookieChange, 3=kEnableReconcile, 4=kForcedReconcile)";
++  if (trigger_ == Trigger::kForcedReconcile ||
++      trigger_ == Trigger::kEnableReconcile) {
++    LOG(WARNING) << "AccountReconcilor: Treating cookie jar as EMPTY (forced/enable reconcile)";
+     OnAccountsInCookieUpdated(
+         /*accounts_in_cookie_jar_info=*/signin::AccountsInCookieJarInfo(
+             /*accounts_are_fresh=*/true,
+@@ -474,6 +485,10 @@ void AccountReconcilor::FinishReconcileWithMultiloginEndpoint(
+   DCHECK(!set_accounts_in_progress_);
+   DCHECK(!log_out_in_progress_);
+   DCHECK_EQ(AccountReconcilorState::kRunning, state_);
++  LOG(WARNING) << "AccountReconcilor::FinishReconcileWithMultiloginEndpoint:"
++               << " primary=" << primary_account.ToString()
++               << " chrome_accounts=" << chrome_accounts.size()
++               << " gaia_accounts=" << gaia_accounts.size();
+ 
+   const signin::MultiloginParameters kLogoutParameters(
+       gaia::MultiloginMode::MULTILOGIN_UPDATE_COOKIE_ACCOUNTS_ORDER,
+@@ -496,17 +511,22 @@ void AccountReconcilor::FinishReconcileWithMultiloginEndpoint(
+         chrome_accounts, primary_account, gaia_accounts, first_execution_,
+         primary_has_error);
+   }
+-  if (CookieNeedsUpdate(parameters_for_multilogin, gaia_accounts)) {
++  bool needs_update = CookieNeedsUpdate(parameters_for_multilogin, gaia_accounts);
++  LOG(WARNING) << "AccountReconcilor: CookieNeedsUpdate=" << needs_update
++               << " accounts_to_send=" << parameters_for_multilogin.accounts_to_send.size();
++  if (needs_update) {
+     // Verify the account reconcilor is not trapped into a loop of repeating the
+     // same request with the same params.
+     if (throttler_.TryMultiloginOperation(parameters_for_multilogin)) {
+       if (parameters_for_multilogin == kLogoutParameters) {
++        LOG(WARNING) << "AccountReconcilor: Calling PerformLogoutAllAccountsAction";
+         RecordReconcileOperation(trigger_, Operation::kLogout);
+         // UPDATE mode does not support empty list of accounts, call logout
+         // instead.
+         log_out_in_progress_ = true;
+         PerformLogoutAllAccountsAction();
+       } else {
++        LOG(WARNING) << "AccountReconcilor: Calling PerformSetCookiesAction (Multilogin)";
+         // Reconcilor has to do some calls to gaia. is_reconcile_started_ is
+         // true and any StartReconcile() calls that are made in the meantime
+         // will be aborted until OnSetAccountsInCookieCompleted is called and
+@@ -526,6 +546,7 @@ void AccountReconcilor::FinishReconcileWithMultiloginEndpoint(
+     }
+   } else {
+     // Nothing to do, accounts already match.
++    LOG(WARNING) << "AccountReconcilor: CookieNeedsUpdate=false, SKIPPING Multilogin (accounts already match)";
+     RecordReconcileOperation(trigger_, Operation::kNoop);
+     throttler_.Reset();
+     error_during_last_reconcile_ = GoogleServiceAuthError::AuthErrorNone();
+diff --git a/components/signin/internal/identity_manager/account_tracker_service.cc b/components/signin/internal/identity_manager/account_tracker_service.cc
+index 0947dbbe9e3a6..6bab3d4ed9eda 100644
+--- a/components/signin/internal/identity_manager/account_tracker_service.cc
++++ b/components/signin/internal/identity_manager/account_tracker_service.cc
+@@ -291,11 +291,19 @@ void AccountTrackerService::SetAccountInfoFromUserInfo(
+       PickAccountIdForAccount(fetched_user_info.gaia, fetched_user_info.email);
+ 
+   // Whether the existing account in pref matches the fetched account.
+-  bool accounts_matching = user_info_copy.account_id == account_info.account_id;
++  // MICROG FIX: Also match by email since microG may provide different account ID format
++  bool accounts_matching =
++      user_info_copy.account_id == account_info.account_id ||
++      (user_info_copy.email == account_info.email && !account_info.email.empty());
+   base::UmaHistogramBoolean("Signin.AccountInPref.MatchingFetchedAccount",
+                             accounts_matching);
+ 
+   if (accounts_matching) {
++    // MICROG FIX: If account IDs differ but emails match, update user_info_copy
++    // to use existing ID so UpdateWith() doesn't reject the update
++    if (user_info_copy.account_id != account_info.account_id) {
++      user_info_copy.account_id = account_info.account_id;
++    }
+     account_info.UpdateWith(user_info_copy);
+   } else {
+     DLOG(ERROR) << "Cannot set account info from user info as account ids "
+diff --git a/components/signin/internal/identity_manager/gaia_cookie_manager_service.cc b/components/signin/internal/identity_manager/gaia_cookie_manager_service.cc
+index b585a86743d59..92a45446546a7 100644
+--- a/components/signin/internal/identity_manager/gaia_cookie_manager_service.cc
++++ b/components/signin/internal/identity_manager/gaia_cookie_manager_service.cc
+@@ -760,7 +760,6 @@ void GaiaCookieManagerService::OnListAccountsFailure(
+ void GaiaCookieManagerService::OnLogOutSuccess() {
+   DCHECK(requests_.front().request_type() == GaiaCookieRequestType::LOG_OUT);
+   RecordLogoutRequestState(LogoutRequestState::kSuccess);
+-
+   MarkListAccountsStale();
+   SignalLogOutComplete(GoogleServiceAuthError::AuthErrorNone());
+   fetcher_backoff_.InformOfRequest(true);
+diff --git a/components/signin/internal/identity_manager/oauth_multilogin_helper.cc b/components/signin/internal/identity_manager/oauth_multilogin_helper.cc
+index 781119c452c3c..ed03772a9c159 100644
+--- a/components/signin/internal/identity_manager/oauth_multilogin_helper.cc
++++ b/components/signin/internal/identity_manager/oauth_multilogin_helper.cc
+@@ -350,6 +350,9 @@ void OAuthMultiloginHelper::StartFetchingMultiLogin() {
+ 
+ void OAuthMultiloginHelper::OnOAuthMultiloginFinished(
+     const OAuthMultiloginResult& result) {
++  LOG(WARNING) << "OAuthMultiloginHelper::OnOAuthMultiloginFinished: status="
++               << static_cast<int>(result.status())
++               << " cookies=" << result.cookies().size();
+   RecordMultiloginResponseStatus(result.status(),
+                                  partition_delegate_->GetPartitionSuffix());
+ 
+@@ -441,6 +444,8 @@ void OAuthMultiloginHelper::OnOAuthMultiloginFinished(
+ 
+ void OAuthMultiloginHelper::StartSettingCookies(
+     const OAuthMultiloginResult& result) {
++  LOG(WARNING) << "OAuthMultiloginHelper::StartSettingCookies: "
++               << result.cookies().size() << " cookies to set";
+   network::mojom::CookieManager* cookie_manager =
+       partition_delegate_->GetCookieManagerForPartition();
+   net::CookieInclusionStatus default_cookie_inclusion_status;
+diff --git a/google_apis/gaia/gaia_auth_fetcher.cc b/google_apis/gaia/gaia_auth_fetcher.cc
+index 13d03f0d73faa..b9ff0817e8889 100644
+--- a/google_apis/gaia/gaia_auth_fetcher.cc
++++ b/google_apis/gaia/gaia_auth_fetcher.cc
+@@ -506,6 +506,15 @@ void GaiaAuthFetcher::StartOAuthMultilogin(
+     gaia::MultiloginCookieBindingParams cookie_binding_params) {
+   DCHECK(!fetch_pending_) << "Tried to fetch two things at once!";
+ 
++  LOG(WARNING) << "GaiaAuthFetcher::StartOAuthMultilogin: accounts=" << accounts.size()
++               << " mode=" << static_cast<int>(mode)
++               << " external_cc_result_len=" << external_cc_result.length();
++  for (size_t i = 0; i < accounts.size(); i++) {
++    LOG(WARNING) << "  Account[" << i << "]: gaia_id=" << accounts[i].gaia_id.ToString()
++                 << " token_len=" << accounts[i].token.length()
++                 << " token_prefix=" << accounts[i].token.substr(0, 10);
++  }
++
+   UMA_HISTOGRAM_COUNTS_100("Signin.Multilogin.NumberOfAccounts",
+                            accounts.size());
+ 
+@@ -865,6 +874,12 @@ void GaiaAuthFetcher::OnGetCheckConnectionInfoFetched(const std::string& data,
+ void GaiaAuthFetcher::OnOAuthMultiloginFetched(const std::string& data,
+                                                net::Error net_error,
+                                                int response_code) {
++  LOG(WARNING) << "GaiaAuthFetcher::OnOAuthMultiloginFetched: net_error=" << net_error
++               << " response_code=" << response_code
++               << " data_len=" << data.length();
++  if (response_code != 200 && data.length() < 500) {
++    LOG(WARNING) << "  Response body: " << data;
++  }
+   OAuthMultiloginResult result =
+       (net_error == net::Error::OK)
+           ? OAuthMultiloginResult(data, response_code,
