@@ -1,0 +1,28 @@
+Enable the "Darken websites" checkbox in theme settings
+
+Chromium ships kDarkenWebsitesCheckboxInThemesSetting disabled, so the checkbox
+never appears and web contents are never auto-darkened. Cromite enables it via
+its own cromite_flags/ infrastructure, which this tree does not have, so the
+feature default is flipped directly instead.
+
+Effect: Settings > Theme grows a "Darken websites" checkbox, shown only for the
+Dark and System default themes. Auto-dark then applies to sites that have no
+dark theme of their own, and only while the browser is actually in night mode
+(WebContentsDarkModeController.isFeatureEnabled = global setting && inNightMode).
+The feature's own kDarkenWebsitesCheckboxOptOut param defaults true, so the
+AUTO_DARK_WEB_CONTENT content setting registers as ALLOW: darkening is opt-out
+once the feature is on, and can be turned off globally here or per-site from the
+app menu.
+---
+diff --git a/components/content_settings/core/common/features.cc b/components/content_settings/core/common/features.cc
+--- a/components/content_settings/core/common/features.cc
++++ b/components/content_settings/core/common/features.cc
+@@ -12,7 +12,7 @@ namespace content_settings {
+ // Enables auto dark feature in theme settings.
+ #if BUILDFLAG(IS_ANDROID)
+ BASE_FEATURE(kDarkenWebsitesCheckboxInThemesSetting,
+-             base::FEATURE_DISABLED_BY_DEFAULT);
++             base::FEATURE_ENABLED_BY_DEFAULT);
+ constexpr base::FeatureParam<bool> kDarkenWebsitesCheckboxOptOut{
+     &kDarkenWebsitesCheckboxInThemesSetting, "opt_out", true};
+ #endif  // BUILDFLAG(IS_ANDROID)

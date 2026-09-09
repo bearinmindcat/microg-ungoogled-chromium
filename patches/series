@@ -93,5 +93,6 @@ Bromite/Revert-flags-remove-disable-pull-to-refresh-effect.patch
 Bromite/Disable-DRM-media-origin-IDs-preprovisioning.patch
 Bromite/Add-an-always-incognito-mode.patch
 Cromite/Add-bookmark-import-export-actions.patch
+Cromite/UI/Enable-darken-websites-checkbox-in-themes.patch
 
 #Other/debug-fix.patch
