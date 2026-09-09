@@ -1,0 +1,27 @@
+diff --git a/extensions/browser/ui_util.cc b/extensions/browser/ui_util.cc
+index f32f25522138f..0a58f48afd902 100644
+--- a/extensions/browser/ui_util.cc
++++ b/extensions/browser/ui_util.cc
+@@ -1,4 +1,4 @@
+-// Copyright 2020 The Chromium Authors
++// Copyright 2026 The Chromium Authors, Alex313031, and not-lucky
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+@@ -73,14 +73,14 @@ bool ShouldDisplayInExtensionSettings(Manifest::Type type,
+     return false;
+   }
+ 
+-  // Unless they are unpacked, never show hosted apps. Note: We intentionally
++  // Unless they are unpacked, show hosted apps in Thorium. Note: We intentionally
+   // show packaged apps and platform apps because there are some pieces of
+   // functionality that are only available in chrome://extensions/ but which
+   // are needed for packaged and platform apps. For example, inspecting
+   // background pages. See http://crbug.com/40162419.
+   if (!Manifest::IsUnpackedLocation(location) &&
+       type == Manifest::Type::kHostedApp) {
+-    return false;
++    return true;
+   }
+ 
+   return true;

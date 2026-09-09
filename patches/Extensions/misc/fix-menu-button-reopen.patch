@@ -1,0 +1,38 @@
+diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuCoordinator.java b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuCoordinator.java
+--- a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuCoordinator.java
++++ b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuCoordinator.java
+@@ -10,6 +10,7 @@
+ import android.graphics.Rect;
+ import android.os.Handler;
+ import android.os.Looper;
++import android.os.SystemClock;
+ import android.view.LayoutInflater;
+ import android.view.View;
+ 
+@@ -98,6 +99,8 @@
+     private final ModalDialogManager mModalDialogManager;
+ 
+     @Nullable @VisibleForTesting ExtensionsMenuMediator mMediator;
++
++    private long mMenuDismissElapsedRealtimeMs;
+     private Callback<String> mOpenUrlInCustomTab;
+ 
+     /**
+@@ -184,6 +187,9 @@
+         // Menu mediator is created when menu is triggered.
+         mExtensionsMenuButton.setOnClickListener(
+                 (view) -> {
++                    if (SystemClock.elapsedRealtime() - mMenuDismissElapsedRealtimeMs < 100) {
++                        return;
++                    }
+                     TrackerFactory.getTrackerForProfile(mProfile)
+                             .notifyEvent(EventConstants.EXTENSIONS_MENU_BUTTON_CLICKED);
+                     createMediator();
+@@ -196,6 +202,7 @@
+ 
+                     @Override
+                     public void onPopupMenuDismissed() {
++                        mMenuDismissElapsedRealtimeMs = SystemClock.elapsedRealtime();
+                         mMenuButtonPinningDelegate.requestLayoutWithViewUtils();
+                         destroyMediator();
+                         mExtensionModels.clear();

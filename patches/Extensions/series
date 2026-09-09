@@ -1,0 +1,5 @@
+android-extensions-support.patch
+enable-extension-in-incognito.patch
+add-quick-extension-toggle-menu.patch
+show-hosted-apps-in-extensions.patch
+increase-dnr-limits.patch

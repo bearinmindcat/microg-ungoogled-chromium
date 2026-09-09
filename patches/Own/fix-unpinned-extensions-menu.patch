@@ -1,0 +1,48 @@
+diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsToolbarCoordinatorImpl.java b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsToolbarCoordinatorImpl.java
+--- a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsToolbarCoordinatorImpl.java
++++ b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsToolbarCoordinatorImpl.java
+@@ -48,5 +48,6 @@
+ import org.chromium.ui.base.ViewUtils;
+ import org.chromium.ui.base.WindowAndroid;
+ import org.chromium.ui.listmenu.ListMenuButton;
++import org.chromium.ui.listmenu.ListMenuHost;
+ import org.chromium.ui.modaldialog.ModalDialogManager;
+ import org.chromium.ui.modelutil.PropertyModel;
+@@ -254,15 +255,27 @@
+     @Override
+     public void showExtensionsMenu() {
+         mShowExtensionsMenuPending = true;
+         updateMenuIconVisibility();
+ 
+         ListMenuButton extensionsMenuButton = mContainer.findViewById(R.id.extensions_menu_button);
+         assert extensionsMenuButton != null;
+ 
++        extensionsMenuButton.addPopupListener(
++                new ListMenuHost.PopupMenuShownListener() {
++                    @Override
++                    public void onPopupMenuShown() {}
++
++                    @Override
++                    public void onPopupMenuDismissed() {
++                        extensionsMenuButton.removePopupListener(this);
++                        mShowExtensionsMenuPending = false;
++                        updateMenuIconVisibility();
++                    }
++                });
++
+         // Post to click after the layout pass.
+         extensionsMenuButton.post(
+                 () -> {
+-                    mShowExtensionsMenuPending = false;
+                     extensionsMenuButton.performClick();
+                 });
+     }
+@@ -356,7 +369,7 @@
+     }
+ 
+     private boolean shouldShowMenuIcon() {
+-        return isMenuButtonPinned();
++        return isMenuButtonPinned() || mShowExtensionsMenuPending;
+     }
+ 
+     public class MenuButtonPinningDelegate {

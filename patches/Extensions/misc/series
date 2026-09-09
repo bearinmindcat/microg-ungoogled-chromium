@@ -1,0 +1,7 @@
+extension-context-menu-commands.patch
+extensions-menu-null-guard.patch
+extension-popup-key-event-guard.patch
+hide-inline-site-access-in-menu.patch
+add-pin-button-to-menu-row.patch
+webstore-desktop-site.patch
+fix-menu-button-reopen.patch

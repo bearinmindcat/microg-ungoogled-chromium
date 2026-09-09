@@ -1,0 +1,15 @@
+diff --git a/extensions/browser/process_manager.cc b/extensions/browser/process_manager.cc
+--- a/extensions/browser/process_manager.cc
++++ b/extensions/browser/process_manager.cc
+@@ -210,9 +210,8 @@ ProcessManager::ProcessManager(BrowserContext* context,
+       last_background_close_sequence_id_(0) {
+   extension_registry_->AddObserver(this);
+ 
+-  // Only the original profile needs to listen for ready to create background
+-  // pages for all spanning extensions.
+-  if (!context->IsOffTheRecord()) {
++  if (!context->IsOffTheRecord() ||
++      !ExtensionsBrowserClient::Get()->GetProcessManagerDelegate()) {
+     ExtensionSystem::Get(context)->ready().Post(
+         FROM_HERE,
+         base::BindOnce(&ProcessManager::MaybeCreateStartupBackgroundHosts,

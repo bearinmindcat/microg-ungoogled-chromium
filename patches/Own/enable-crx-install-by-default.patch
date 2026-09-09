@@ -1,0 +1,12 @@
+diff --git a/chrome/browser/extensions/extension_management.cc b/chrome/browser/extensions/extension_management.cc
+--- a/chrome/browser/extensions/extension_management.cc
++++ b/chrome/browser/extensions/extension_management.cc
+@@ -340,7 +340,7 @@ bool ExtensionManagement::IsOffstoreInstallAllowed(
+     const GURL& referrer_url) const {
+   const base::CommandLine& command_line =
+       *base::CommandLine::ForCurrentProcess();
+-  if (command_line.HasSwitch("extension-mime-request-handling") &&
++  if (!command_line.HasSwitch("extension-mime-request-handling") ||
+       command_line.GetSwitchValueASCII("extension-mime-request-handling") ==
+       "always-prompt-for-install") {
+     return true;

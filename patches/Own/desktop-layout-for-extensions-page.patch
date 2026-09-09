@@ -1,0 +1,13 @@
+diff --git a/chrome/browser/resources/extensions/extensions.html b/chrome/browser/resources/extensions/extensions.html
+--- a/chrome/browser/resources/extensions/extensions.html
++++ b/chrome/browser/resources/extensions/extensions.html
+@@ -7,9 +7,6 @@
+ <head>
+   <meta charset="utf8">
+   <meta name="color-scheme" content="light dark">
+-<if expr="is_android">
+-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+-</if>
+   <title>$i18n{title}</title>
+   <base href="chrome://extensions">
+   <link rel="stylesheet" href="chrome://resources/css/md_colors.css">

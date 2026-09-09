@@ -1,0 +1,12 @@
+enable-extensions-by-default.patch
+enable-crx-install-by-default.patch
+fix-unpinned-extensions-menu.patch
+desktop-layout-for-extensions-page.patch
+sidebar-store-links.patch
+opera-addons-icon.patch
+neverdecaf-chromium-icon.patch
+desktop-site-for-link-navigations.patch
+settings-overrides-android.patch
+allow-non-webstore-crx3.patch
+opera-store-user-agent.patch
+crx-install-prompt-android.patch

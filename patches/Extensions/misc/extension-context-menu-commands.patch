@@ -1,0 +1,39 @@
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/contextmenu/ContextMenuMediator.java b/chrome/android/java/src/org/chromium/chrome/browser/contextmenu/ContextMenuMediator.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/contextmenu/ContextMenuMediator.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/contextmenu/ContextMenuMediator.java
+@@ -11,6 +11,7 @@ import static org.chromium.ui.listmenu.ListMenuItemProperties.ENABLED;
+ import static org.chromium.ui.listmenu.ListMenuItemProperties.MENU_ITEM_ID;
+ 
+ import android.app.Activity;
++import android.view.View;
+ import android.widget.ListView;
+ 
+ import androidx.annotation.IdRes;
+@@ -122,10 +123,23 @@ public class ContextMenuMediator {
+             if (item.type == ListItemType.MENU_ITEM
+                     || item.type == ContextMenuItemType.CONTEXT_MENU_ITEM_WITH_ICON_BUTTON) {
+                 // Note: this does NOT handle items inside submenus.
+-                item.model.set(
+-                        CLICK_LISTENER,
+-                        // Note: clickItem already includes dismissDialog.
+-                        (v) -> clickItem(item.model.get(MENU_ITEM_ID), item.model.get(ENABLED)));
++                View.OnClickListener ownListener = item.model.get(CLICK_LISTENER);
++                if (ownListener != null) {
++                    item.model.set(
++                            CLICK_LISTENER,
++                            (v) -> {
++                                if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
++                                ownListener.onClick(v);
++                                if (item.model.get(ENABLED)) mDismissDialog.run();
++                            });
++                } else {
++                    item.model.set(
++                            CLICK_LISTENER,
++                            (v) ->
++                                    clickItem(
++                                            item.model.get(MENU_ITEM_ID),
++                                            item.model.get(ENABLED)));
++                }
+             }
+             if (item.type == ContextMenuItemType.CONTEXT_MENU_ITEM_WITH_ICON_BUTTON) {
+                 PropertyModel model = item.model;

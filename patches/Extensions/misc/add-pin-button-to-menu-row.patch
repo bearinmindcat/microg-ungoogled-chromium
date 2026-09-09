@@ -1,0 +1,184 @@
+diff --git a/chrome/browser/ui/android/extensions/BUILD.gn b/chrome/browser/ui/android/extensions/BUILD.gn
+--- a/chrome/browser/ui/android/extensions/BUILD.gn
++++ b/chrome/browser/ui/android/extensions/BUILD.gn
+@@ -272,6 +272,7 @@ android_resources("java_resources") {
+     "java/res/drawable/extensions_menu_button_bg.xml",
+     "java/res/drawable/extensions_menu_containment.xml",
+     "java/res/drawable/extensions_menu_context_menu_icon_selector.xml",
++    "java/res/drawable/extensions_menu_pin_icon_selector.xml",
+     "java/res/drawable/extensions_zero_state.xml",
+     "java/res/drawable/ic_close.xml",
+     "java/res/drawable/ic_more_vert.xml",
+diff --git a/chrome/browser/ui/android/extensions/extensions_toolbar_android.cc b/chrome/browser/ui/android/extensions/extensions_toolbar_android.cc
+--- a/chrome/browser/ui/android/extensions/extensions_toolbar_android.cc
++++ b/chrome/browser/ui/android/extensions/extensions_toolbar_android.cc
+@@ -392,6 +392,15 @@ void ExtensionsToolbarAndroid::MovePinnedAction(
+   toolbar_view_model_->MovePinnedAction(action_id, target_index);
+ }
+ 
++void ExtensionsToolbarAndroid::ToggleActionPinned(
++    const ToolbarActionsModel::ActionId& action_id) {
++  ToolbarActionsModel* model =
++      ToolbarActionsModel::Get(browser_->GetProfile());
++  if (model && !model->IsActionForcePinned(action_id)) {
++    model->SetActionVisibility(action_id, !model->IsActionPinned(action_id));
++  }
++}
++
+ static int64_t JNI_ExtensionsToolbarBridge_Init(
+     JNIEnv* env,
+     const base::android::JavaRef<jobject>& java_object,
+diff --git a/chrome/browser/ui/android/extensions/extensions_toolbar_android.h b/chrome/browser/ui/android/extensions/extensions_toolbar_android.h
+--- a/chrome/browser/ui/android/extensions/extensions_toolbar_android.h
++++ b/chrome/browser/ui/android/extensions/extensions_toolbar_android.h
+@@ -95,6 +95,7 @@ class ExtensionsToolbarAndroid : public ExtensionsToolbarViewModel::Delegate,
+                                     content::WebContents* web_contents);
+   void MovePinnedAction(const ToolbarActionsModel::ActionId& action_id,
+                         int target_index);
++  void ToggleActionPinned(const ToolbarActionsModel::ActionId& action_id);
+ 
+  private:
+   void RegisterIconObserverForAction(
+diff --git a/chrome/browser/ui/android/extensions/java/res/drawable/extensions_menu_pin_icon_selector.xml b/chrome/browser/ui/android/extensions/java/res/drawable/extensions_menu_pin_icon_selector.xml
+new file mode 100644
+--- /dev/null
++++ b/chrome/browser/ui/android/extensions/java/res/drawable/extensions_menu_pin_icon_selector.xml
+@@ -0,0 +1,14 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++Copyright 2026 The Chromium Authors
++Use of this source code is governed by a BSD-style license that can be
++found in the LICENSE file.
++-->
++
++<selector xmlns:android="http://schemas.android.com/apk/res/android">
++    <item
++        android:state_activated="true"
++        android:drawable="@drawable/ic_keep_24dp" />
++
++    <item android:drawable="@drawable/ic_keep_off_24dp" />
++</selector>
+diff --git a/chrome/browser/ui/android/extensions/java/res/layout/extensions_menu_item.xml b/chrome/browser/ui/android/extensions/java/res/layout/extensions_menu_item.xml
+--- a/chrome/browser/ui/android/extensions/java/res/layout/extensions_menu_item.xml
++++ b/chrome/browser/ui/android/extensions/java/res/layout/extensions_menu_item.xml
+@@ -66,6 +66,20 @@ found in the LICENSE file.
+             android:layout_width="wrap_content"
+             android:layout_height="48dp"
+             android:layout_marginEnd="8dp"
++            app:layout_constraintEnd_toStartOf="@id/extensions_menu_item_pin"
++            app:layout_constraintTop_toTopOf="parent"
++            app:layout_constraintBottom_toBottomOf="parent" />
++
++        <ImageView
++            android:id="@+id/extensions_menu_item_pin"
++            android:layout_width="wrap_content"
++            android:layout_height="0dp"
++            android:src="@drawable/extensions_menu_pin_icon_selector"
++            android:tint="@color/default_icon_color_tint_list"
++            android:background="?attr/selectableItemBackgroundBorderless"
++            android:padding="8dp"
++            android:scaleType="centerInside"
++            android:contentDescription="@string/extensions_pin_to_toolbar_setting"
+             app:layout_constraintEnd_toStartOf="@id/extensions_menu_item_context_menu"
+             app:layout_constraintTop_toTopOf="parent"
+             app:layout_constraintBottom_toBottomOf="parent" />
+diff --git a/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsToolbarBridge.java b/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsToolbarBridge.java
+--- a/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsToolbarBridge.java
++++ b/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsToolbarBridge.java
+@@ -244,6 +244,15 @@ public class ExtensionsToolbarBridge implements ChromeAndroidTaskFeature, Destro
+                 .movePinnedAction(Instance().mNativeExtensionsToolbarAndroid, actionId, targetIndex);
+     }
+ 
++    public void toggleActionPinned(String actionId) {
++        assert Instance().mNativeExtensionsToolbarAndroid != 0;
++        if (getActiveProfile().shutdownStarted()) {
++            return;
++        }
++        ExtensionsToolbarBridgeJni.get()
++                .toggleActionPinned(Instance().mNativeExtensionsToolbarAndroid, actionId);
++    }
++
+     public void onRequestAccessButtonClicked(WebContents webContents) {
+         assert Instance().mNativeExtensionsToolbarAndroid != 0;
+         if (getActiveProfile().shutdownStarted()) {
+@@ -494,6 +503,10 @@ public class ExtensionsToolbarBridge implements ChromeAndroidTaskFeature, Destro
+                 @JniType("std::string") String actionId,
+                 int targetIndex);
+ 
++        void toggleActionPinned(
++                long nativeExtensionsToolbarAndroid,
++                @JniType("std::string") String actionId);
++
+         void onRequestAccessButtonClicked(
+                 long nativeExtensionsToolbarAndroid,
+                 @JniType("content::WebContents*") WebContents webContents);
+diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemProperties.java b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemProperties.java
+--- a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemProperties.java
++++ b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemProperties.java
+@@ -37,6 +37,9 @@ public class ExtensionsMenuItemProperties {
+     public static final WritableObjectPropertyKey<View.OnClickListener>
+             CONTEXT_MENU_BUTTON_ON_CLICK = new WritableObjectPropertyKey<>();
+ 
++    public static final WritableObjectPropertyKey<View.OnClickListener> PIN_ON_CLICK =
++            new WritableObjectPropertyKey<>();
++
+     public static final WritableObjectPropertyKey<View.OnClickListener> PRIMARY_ACTION_ON_CLICK =
+             new WritableObjectPropertyKey<>();
+ 
+@@ -78,6 +81,7 @@ public class ExtensionsMenuItemProperties {
+                 TITLE,
+                 CONTEXT_MENU_BUTTON_ACCESSIBLE_NAME,
+                 CONTEXT_MENU_BUTTON_ON_CLICK,
++                PIN_ON_CLICK,
+                 PRIMARY_ACTION_ON_CLICK,
+                 SITE_ACCESS_TOGGLE_CHECKED,
+                 SITE_ACCESS_TOGGLE_ON_CLICK,
+diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemViewBinder.java b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemViewBinder.java
+--- a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemViewBinder.java
++++ b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemViewBinder.java
+@@ -45,11 +45,14 @@ public class ExtensionsMenuItemViewBinder {
+             @Nullable Bitmap bitmap = model.get(ExtensionsMenuItemProperties.ICON);
+             iconView.setImageBitmap(bitmap);
+         } else if (key == ExtensionsMenuItemProperties.IS_PINNED) {
+-            ImageView button = view.findViewById(R.id.extensions_menu_item_context_menu);
+             boolean isPinned = model.get(ExtensionsMenuItemProperties.IS_PINNED);
+-            button.setActivated(isPinned);
++            ImageView pin = view.findViewById(R.id.extensions_menu_item_pin);
++            pin.setActivated(isPinned);
+         } else if (key == ExtensionsMenuItemProperties.ITEM_CLICK_LISTENER) {
+             view.setOnClickListener(model.get(ExtensionsMenuItemProperties.ITEM_CLICK_LISTENER));
++        } else if (key == ExtensionsMenuItemProperties.PIN_ON_CLICK) {
++            view.findViewById(R.id.extensions_menu_item_pin)
++                    .setOnClickListener(model.get(ExtensionsMenuItemProperties.PIN_ON_CLICK));
+         } else if (key == ExtensionsMenuItemProperties.CONTEXT_MENU_BUTTON_ON_CLICK) {
+             view.findViewById(R.id.extensions_menu_item_context_menu)
+                     .setOnClickListener(
+diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java
+--- a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java
++++ b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java
+@@ -47,6 +47,7 @@ class ExtensionsMenuMediator implements Destroyable, ExtensionsMenuBridge.Observ
+     private final Context mContext;
+     private final NullableObservableSupplier<Tab> mCurrentTabSupplier;
+     private final ExtensionsMenuBridge mMenuBridge;
++    private final ExtensionsToolbarBridge mToolbarBridge;
+     private final PropertyModel mMainPageModel;
+     private final PropertyModel mSitePermissionsPageModel;
+     private final Runnable mOnReady;
+@@ -92,6 +93,7 @@ class ExtensionsMenuMediator implements Destroyable, ExtensionsMenuBridge.Observ
+         mOpenUrlInCustomTab = openUrlInCustomTab;
+         mTabCreator = tabCreator;
+         mTask = task;
++        mToolbarBridge = toolbarBridge;
+         mMenuBridge = ExtensionsMenuBridge.Instance();
+         mMenuBridge.setObserver(mTask, /* observer= */ this);
+ 
+@@ -417,6 +419,9 @@ class ExtensionsMenuMediator implements Destroyable, ExtensionsMenuBridge.Observ
+                         .with(
+                                 ExtensionsMenuItemProperties.SITE_PERMISSIONS_BUTTON_ON_CLICK,
+                                 (view) -> onSitePermissionsButtonClicked(entry.id))
++                        .with(
++                                ExtensionsMenuItemProperties.PIN_ON_CLICK,
++                                (view) -> mToolbarBridge.toggleActionPinned(entry.id))
+                         .build();
+         updateMenuItem(model, entry);
+         return new ListItem(0, model);
