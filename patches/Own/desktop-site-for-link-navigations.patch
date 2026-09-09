@@ -1,0 +1,58 @@
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebContentsObserver.java b/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebContentsObserver.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebContentsObserver.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebContentsObserver.java
+@@ -41,7 +41,9 @@
+ import org.chromium.chrome.browser.usb.UsbNotificationManager;
+ import org.chromium.content_public.browser.GlobalRenderFrameHostId;
+ import org.chromium.content_public.browser.LifecycleState;
++import org.chromium.content_public.browser.LoadUrlParams;
+ import org.chromium.content_public.browser.NavigationHandle;
++import org.chromium.content_public.browser.navigation_controller.UserAgentOverrideOption;
+ import org.chromium.content_public.browser.Page;
+ import org.chromium.content_public.browser.WebContents;
+ import org.chromium.content_public.browser.WebContentsObserver;
+@@ -284,6 +286,7 @@
+ 
+         @Override
+         public void didStartNavigationInPrimaryMainFrame(NavigationHandle navigation) {
++            maybeApplyDesktopSiteSetting(navigation);
+             if (!navigation.isSameDocument()) {
+                 mTab.didStartPageLoad(navigation.getUrl());
+             }
+@@ -294,6 +297,36 @@
+             }
+         }
+ 
++
++        private @Nullable GURL mUserAgentReissuedUrl;
++
++        private void maybeApplyDesktopSiteSetting(NavigationHandle navigation) {
++            GURL reissued = mUserAgentReissuedUrl;
++            mUserAgentReissuedUrl = null;
++            WebContents webContents = mTab.getWebContents();
++            if (navigation.isSameDocument() || navigation.isPost() || webContents == null) {
++                return;
++            }
++            GURL url = navigation.getUrl();
++            String scheme = url.getScheme();
++            if (!"http".equals(scheme) && !"https".equals(scheme)) return;
++            @UserAgentOverrideOption
++            int option = mTab.calculateUserAgentOverrideOption(url);
++            if (option == UserAgentOverrideOption.INHERIT || url.equals(reissued)) return;
++            mUserAgentReissuedUrl = url;
++            webContents
++                    .getNavigationController()
++                    .setUseDesktopUserAgent(
++                            option == UserAgentOverrideOption.TRUE,
++                            /* reloadOnChange= */ false,
++                            /* skipOnInitialNavigation= */ false);
++            PostTask.postTask(
++                    TaskTraits.UI_DEFAULT,
++                    () -> {
++                        if (!mTab.isDestroyed()) mTab.loadUrl(new LoadUrlParams(url.getSpec()));
++                    });
++        }
++
+         @Override
+         public void didRedirectNavigation(NavigationHandle navigation) {
+             RewindableIterator<TabObserver> observers = mTab.getTabObservers();

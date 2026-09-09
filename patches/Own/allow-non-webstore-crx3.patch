@@ -1,0 +1,23 @@
+diff --git a/components/crx_file/crx_verifier.cc b/components/crx_file/crx_verifier.cc
+--- a/components/crx_file/crx_verifier.cc
++++ b/components/crx_file/crx_verifier.cc
+@@ -9,6 +9,7 @@
+ #include <cstring>
+ #include <iterator>
+ #include <memory>
++#include <tuple>
+ #include <optional>
+ #include <set>
+ #include <utility>
+@@ -210,9 +211,8 @@
+     return VerifierResult::ERROR_REQUIRED_PROOF_MISSING;
+   }
+ 
+-  if (require_publisher_key && !found_publisher_key) {
+-    return VerifierResult::ERROR_REQUIRED_PROOF_MISSING;
+-  }
++  std::ignore = require_publisher_key;
++  std::ignore = found_publisher_key;
+ 
+   // Update and finalize the verifiers with [archive].
+   if (!ReadHashAndVerifyArchive(file, hash, verifiers)) {

@@ -260,7 +260,7 @@ if [ "$RESUME" != y ]; then
 
   # Ignore the pruning error
   python3 ungoogled-chromium/utils/prune_binaries.py src ungoogled-chromium/pruning.list --keep-contingent-paths || true
-  for _p in disable-gaia.patch disable-gcm.patch; do
+for _p in disable-gaia.patch disable-gcm.patch disable-webstore-urls.patch 0005-disable-default-extensions.patch; do
   if grep -qE "^[^#].*${_p}$" ungoogled-chromium/patches/series; then
     sed -i "s|^\(.*${_p}\)$|#\1|" ungoogled-chromium/patches/series
     echo "microG: disabled core/${_p}"
@@ -268,19 +268,7 @@ if [ "$RESUME" != y ]; then
 done
 python3 ungoogled-chromium/utils/patches.py apply src ungoogled-chromium/patches
 
-# microG: sign-in and sync must reach REAL Google endpoints. ungoogled's domain
-# substitution rewrites googleapis.com -> 9oo91eapis.qjz9zk inside the Gaia auth
-# and sync code, which breaks both halves of microG sync:
-#   * GoogleAuthUtil is asked for a token scoped to
-#     https://www.9oo91eapis.qjz9zk/auth/userinfo.email -- a domain that cannot
-#     resolve -- so every getAccessToken returns NETWORK_ERROR and sign-in hangs
-#     on "Signing in...".
-#   * components/sync/base/sync_util.h points the sync server at
-#     https://clients4.9oo91e.qjz9zk/chrome-sync.
-# Drop those files from the substitution lists so they keep real domains. The
-# rest of the tree stays substituted, so ungoogled's posture is unchanged
-# everywhere except the auth path we deliberately re-enable.
-_mg_desub='^(google_apis/gaia/|google_apis/google_api_keys\.|components/signin/|components/sync/)'
+_mg_desub='^(\./)?(google_apis/gaia/|google_apis/google_api_keys\.|components/signin/|components/sync/|extensions/common/extension_urls\.|chrome/app/extensions_strings\.grdp|extensions/strings/extensions_strings\.grd|extensions/browser/updater/|chrome/browser/extensions/updater/|components/embedder_support/android/java/src/org/chromium/components/embedder_support/util/UrlConstants\.java|chrome/common/extensions/api/_api_features\.json|extensions/common/api/_api_features\.json)'
 for _sl in ungoogled-chromium/domain_substitution.list "${substitution_list_2:-domain_sub_2.list}"; do
   [ -f "$_sl" ] || continue
   _n0=$(wc -l < "$_sl")
@@ -340,6 +328,39 @@ grep -q "is_signin_allowed = pref_service_->GetBoolean" \
 grep -q '"signin_pref_names.cc"' src/components/signin/public/base/BUILD.gn \
   || { echo "FATAL: signin_pref_names.cc not in BUILD"; exit 1; }
 echo "microG: layer verified"
+
+for _layer in Extensions Extensions/Ultimatum Extensions/misc Extensions/helium Own; do
+  [ -d "patches/$_layer" ] && [ -f "patches/$_layer/series" ] || continue
+  while read -r _ep; do
+    case "$_ep" in ''|'#'*) continue;; esac
+    _f="patches/$_layer/$_ep"
+    [ -f "$_f" ] || { echo "FATAL: missing $_layer patch: $_ep"; exit 1; }
+    if   ( cd src && git apply --whitespace=nowarn "../$_f" ) 2>/dev/null; then echo "$_layer: applied $_ep"
+    elif ( cd src && git apply --3way --whitespace=nowarn "../$_f" ) 2>/dev/null; then echo "$_layer: applied 3way $_ep"
+    elif ( cd src && patch -p1 --forward --no-backup-if-mismatch -i "../$_f" >/tmp/ext.out 2>&1 ); then echo "$_layer: applied patch $_ep"
+    else tail -5 /tmp/ext.out 2>/dev/null; echo "FATAL: $_layer patch failed: $_ep"; exit 1; fi
+  done < "patches/$_layer/series"
+  echo "$_layer: layer applied"
+done
+
+grep -q "is_desktop_android_thorium" src/build/config/chrome_build.gni \
+  || { echo "FATAL: desktop-android buildflags missing"; exit 1; }
+grep -q "base::FEATURE_ENABLED_BY_DEFAULT" \
+  <(sed -n '/kEnableExtensionsAndroid/,/^#endif/p' src/extensions/common/extension_features.cc) \
+  || { echo "FATAL: extensions not enabled by default"; exit 1; }
+grep -q '!command_line.HasSwitch("extension-mime-request-handling")' \
+  src/chrome/browser/extensions/extension_management.cc \
+  || { echo "FATAL: CRX install not enabled by default"; exit 1; }
+grep -q "StartUpdateCheck(std::move(fetch))" src/extensions/browser/updater/extension_downloader.cc \
+  || { echo "FATAL: extension downloader still disabled (disable-webstore-urls active?)"; exit 1; }
+grep -q "clients2.google.com/service/update2/crx" src/extensions/common/extension_urls.cc \
+  || { echo "FATAL: webstore update URL still domain-substituted"; exit 1; }
+grep -q "http://www.google.com/update2/response" src/extensions/browser/updater/safe_manifest_parser.cc \
+  || { echo "FATAL: update-manifest xmlns still domain-substituted (updates + store installs cannot parse responses)"; exit 1; }
+grep -q 'CHROME_WEBSTORE_URL = "https://chromewebstore.google.com/"' \
+  src/components/embedder_support/android/java/src/org/chromium/components/embedder_support/util/UrlConstants.java \
+  || { echo "FATAL: Java-side webstore URL still domain-substituted (domain_sub_2.list not filtered?)"; exit 1; }
+echo "extensions: layer verified"
 
 
   ## Configure output folder
