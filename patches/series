@@ -96,3 +96,6 @@ Cromite/Add-bookmark-import-export-actions.patch
 Cromite/UI/Enable-darken-websites-checkbox-in-themes.patch
 
 #Other/debug-fix.patch
+ungoogled-chromium-android/Enables-keyword-based-site-search-on-Android-devices.patch
+ungoogled-chromium-android/Add-more-search-engines-updated.patch
+Cromite/OpenSearch-miscellaneous.patch

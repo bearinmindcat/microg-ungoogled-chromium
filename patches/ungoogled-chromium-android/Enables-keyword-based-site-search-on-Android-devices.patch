@@ -1,0 +1,39 @@
+diff --git a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java b/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
+--- a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
++++ b/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
+@@ -89,11 +89,6 @@
+         mModel.set(UrlBarProperties.RICH_TEXT_CHANGE_LISTENER, this::onRichTextChanged);
+         mModel.set(UrlBarProperties.KEY_DOWN_LISTENER, keyDownListener);
+         mModel.set(UrlBarProperties.SHOW_HINT_TEXT, true);
+-        if (OmniboxFeatures.sOmniboxSiteSearch.isEnabled()) {
+-            mModel.set(
+-                    UrlBarProperties.MANAGE_SEARCH_ENGINES_CALLBACK,
+-                    this::onManageSiteSearchClicked);
+-        }
+         setBrandedColorScheme(BrandedColorScheme.APP_DEFAULT);
+         pushTextToModel(/* originChanged= */ false);
+     }
+diff --git a/components/omnibox/common/android/java/src/org/chromium/components/omnibox/OmniboxFeatures.java b/components/omnibox/common/android/java/src/org/chromium/components/omnibox/OmniboxFeatures.java
+--- a/components/omnibox/common/android/java/src/org/chromium/components/omnibox/OmniboxFeatures.java
++++ b/components/omnibox/common/android/java/src/org/chromium/components/omnibox/OmniboxFeatures.java
+@@ -123,7 +123,7 @@
+             newFlag(OmniboxFeatureList.POST_DELAYED_TASK_FOCUS_TAB, FeatureState.ENABLED_IN_PROD);
+ 
+     public static final CachedFlag sOmniboxSiteSearch =
+-            newFlag(OmniboxFeatureList.OMNIBOX_SITE_SEARCH, FeatureState.ENABLED_IN_TEST);
++            newFlag(OmniboxFeatureList.OMNIBOX_SITE_SEARCH, FeatureState.ENABLED_IN_PROD);
+ 
+     public static final CachedFlag sStarterPackExpansion =
+             newFlag(OmniboxFeatureList.STARTER_PACK_EXPANSION, FeatureState.ENABLED_IN_PROD);
+diff --git a/components/omnibox/common/omnibox_features.cc b/components/omnibox/common/omnibox_features.cc
+--- a/components/omnibox/common/omnibox_features.cc
++++ b/components/omnibox/common/omnibox_features.cc
+@@ -283,7 +283,7 @@
+ BASE_FEATURE(kOmniboxTouchDownTriggerForPrefetch, enable_if(IS_ANDROID));
+ 
+ // Enables keyword-based site search functionality on Android devices.
+-BASE_FEATURE(kOmniboxSiteSearch, DISABLED);
++BASE_FEATURE(kOmniboxSiteSearch, ENABLED);
+ 
+ // Enables additional site search providers for the Site search Starter Pack.
+ BASE_FEATURE(kStarterPackExpansion, base::FEATURE_DISABLED_BY_DEFAULT);

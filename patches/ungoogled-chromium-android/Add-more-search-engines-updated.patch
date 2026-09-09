@@ -1,0 +1,1025 @@
+Subject: Add more search engines (noai_duckduckgo, degoog), rebased for M150
+
+diff --git a/components/search_engines/search_engine_type.h b/components/search_engines/search_engine_type.h
+--- a/components/search_engines/search_engine_type.h
++++ b/components/search_engines/search_engine_type.h
+@@ -100,6 +100,8 @@ enum SearchEngineType {
+   SEARCH_ENGINE_STARTER_PACK_AI_MODE = 80,
+   SEARCH_ENGINE_YAHOO_JP = 81,
+ 
++  SEARCH_ENGINE_NOAI_DUCKDUCKGO = 82,
++  SEARCH_ENGINE_DEGOOG = 83,
+   SEARCH_ENGINE_MAX  // Bounding value needed for UMA histogram macro.
+ };
+ // LINT.ThenChange(//tools/metrics/histograms/enums.xml:OmniboxSearchEngineType)
+diff --git a/third_party/search_engines_data/resources/definitions/prepopulated_engines.json b/third_party/search_engines_data/resources/definitions/prepopulated_engines.json
+--- a/third_party/search_engines_data/resources/definitions/prepopulated_engines.json
++++ b/third_party/search_engines_data/resources/definitions/prepopulated_engines.json
+@@ -22,7 +22,7 @@
+     // use a lower number. This number is used by UMA stats and must be updated
+     // to include the full range or else not all engines will be counted in
+     // stats.
+-    "kMaxPrepopulatedEngineID": 116,
++    "kMaxPrepopulatedEngineID": 118,
+ 
+     // Increment this if you change the data in ways that mean users with
+     // existing data should get a new version. Otherwise, existing data may
+@@ -118,6 +118,23 @@
+       "id": 68
+     },
+ 
++    "noai_duckduckgo": {
++      "name": "DuckDuckGo (No AI)",
++      "keyword": "noai.duckduckgo.com",
++      "favicon_url": "https://duckduckgo.com/favicon.ico",
++      "search_url": "https://noai.duckduckgo.com/?q={searchTerms}",
++      "suggest_url": "https://duckduckgo.com/ac/?q={searchTerms}&type=list",
++      "type": "SEARCH_ENGINE_NOAI_DUCKDUCKGO",
++      "id": 117
++    },
++    "degoog": {
++      "name": "degoog",
++      "keyword": "degoog.org",
++      "favicon_url": "https://degoog.org/favicon.ico",
++      "search_url": "https://degoog.org/search?q={searchTerms}",
++      "type": "SEARCH_ENGINE_DEGOOG",
++      "id": 118
++    },
+     "duckduckgo": {
+       "name": "DuckDuckGo",
+       "keyword": "duckduckgo.com",
+diff --git a/third_party/search_engines_data/resources/definitions/regional_settings.json b/third_party/search_engines_data/resources/definitions/regional_settings.json
+--- a/third_party/search_engines_data/resources/definitions/regional_settings.json
++++ b/third_party/search_engines_data/resources/definitions/regional_settings.json
+@@ -153,6 +153,8 @@
+   "elements": {
+     "AE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -162,6 +164,8 @@
+     },
+     "AL": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -171,6 +175,8 @@
+     },
+     "AR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_ar",
+@@ -180,6 +186,8 @@
+     },
+     "AT": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -192,6 +200,8 @@
+     },
+     "AU": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_au",
+@@ -201,6 +211,8 @@
+     },
+     "BA": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -210,6 +222,8 @@
+     },
+     "BE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -222,6 +236,8 @@
+     },
+     "BG": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -234,6 +250,8 @@
+     },
+     "BH": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -243,6 +261,8 @@
+     },
+     "BI": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -252,6 +272,8 @@
+     },
+     "BN": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -261,6 +283,8 @@
+     },
+     "BO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -270,6 +294,8 @@
+     },
+     "BR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_br",
+@@ -279,6 +305,8 @@
+     },
+     "BY": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_by",
+         "&bing",
+@@ -288,6 +316,8 @@
+     },
+     "BZ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&duckduckgo",
+@@ -297,6 +327,8 @@
+     },
+     "CA": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_ca",
+@@ -306,6 +338,8 @@
+     },
+     "CH": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&duckduckgo",
+@@ -315,6 +349,8 @@
+     },
+     "CL": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_cl",
+@@ -324,6 +360,8 @@
+     },
+     "CN": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&baidu",
+         "&bing",
+         "&sogou",
+@@ -333,6 +371,8 @@
+     },
+     "CO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_co",
+@@ -342,6 +382,8 @@
+     },
+     "CR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -351,6 +393,8 @@
+     },
+     "CY": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -363,6 +407,8 @@
+     },
+     "CZ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&seznam",
+         "&brave",
+@@ -375,6 +421,8 @@
+     },
+     "DE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&duckduckgo",
+         "&brave",
+@@ -387,6 +435,8 @@
+     },
+     "DK": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -399,6 +449,8 @@
+     },
+     "DO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -417,6 +469,8 @@
+     },
+     "EC": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_es",
+@@ -426,6 +480,8 @@
+     },
+     "EE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -438,6 +494,8 @@
+     },
+     "EG": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -447,6 +505,8 @@
+     },
+     "ES": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -459,6 +519,8 @@
+     },
+     "FI": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -471,6 +533,8 @@
+     },
+     "FO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_uk",
+@@ -480,6 +544,8 @@
+     },
+     "FR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&ecosia",
+@@ -492,6 +558,8 @@
+     },
+     "GB": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_uk",
+@@ -501,6 +569,8 @@
+     },
+     "GR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -513,6 +583,8 @@
+     },
+     "GT": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -522,6 +594,8 @@
+     },
+     "HK": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_hk",
+@@ -531,6 +605,8 @@
+     },
+     "HN": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -540,6 +616,8 @@
+     },
+     "HR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -552,6 +630,8 @@
+     },
+     "HU": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -564,6 +644,8 @@
+     },
+     "ID": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_com",
+         "&bing",
+@@ -573,6 +655,8 @@
+     },
+     "IE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&duckduckgo",
+         "&brave",
+@@ -585,6 +669,8 @@
+     },
+     "IL": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yandex_ru",
+@@ -594,6 +680,8 @@
+     },
+     "IN": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_in",
+@@ -603,6 +691,8 @@
+     },
+     "IQ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yandex_tr",
+@@ -612,6 +702,8 @@
+     },
+     "IR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -621,6 +713,8 @@
+     },
+     "IS": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&duckduckgo",
+         "&brave",
+@@ -633,6 +727,8 @@
+     },
+     "IT": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -645,6 +741,8 @@
+     },
+     "JM": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -654,6 +752,8 @@
+     },
+     "JO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -663,6 +763,8 @@
+     },
+     "JP": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yahoo_jp",
+         "&bing",
+@@ -672,6 +774,8 @@
+     },
+     "KE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -681,6 +785,8 @@
+     },
+     "KR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&naver",
+         "&bing",
+@@ -690,6 +796,8 @@
+     },
+     "KW": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yandex_tr",
+@@ -699,6 +807,8 @@
+     },
+     "KZ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_kz",
+         "&bing",
+@@ -708,6 +818,8 @@
+     },
+     "LB": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -717,6 +829,8 @@
+     },
+     "LI": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&duckduckgo",
+         "&brave",
+@@ -729,6 +843,8 @@
+     },
+     "LT": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -741,6 +857,8 @@
+     },
+     "LU": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -753,6 +871,8 @@
+     },
+     "LV": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -765,6 +885,8 @@
+     },
+     "LY": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yandex_tr",
+@@ -774,6 +896,8 @@
+     },
+     "MA": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_fr",
+@@ -783,6 +907,8 @@
+     },
+     "MC": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_fr",
+@@ -792,6 +918,8 @@
+     },
+     "MD": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_ru",
+         "&bing",
+@@ -801,6 +929,8 @@
+     },
+     "ME": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yandex_ru",
+@@ -810,6 +940,8 @@
+     },
+     "MK": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -819,6 +951,8 @@
+     },
+     "MT": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -831,6 +965,8 @@
+     },
+     "MX": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_mx",
+@@ -840,6 +976,8 @@
+     },
+     "MY": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_my",
+@@ -849,6 +987,8 @@
+     },
+     "NI": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -858,6 +998,8 @@
+     },
+     "NL": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&duckduckgo",
+         "&brave",
+@@ -870,6 +1012,8 @@
+     },
+     "NO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&duckduckgo",
+         "&brave",
+@@ -882,6 +1026,8 @@
+     },
+     "NZ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_nz",
+@@ -891,6 +1037,8 @@
+     },
+     "OM": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -900,6 +1048,8 @@
+     },
+     "PA": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_es",
+@@ -909,6 +1059,8 @@
+     },
+     "PE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_pe",
+@@ -918,6 +1070,8 @@
+     },
+     "PH": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_ph",
+@@ -927,6 +1081,8 @@
+     },
+     "PK": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -936,6 +1092,8 @@
+     },
+     "PL": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -948,6 +1106,8 @@
+     },
+     "PR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -957,6 +1117,8 @@
+     },
+     "PT": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -969,6 +1131,8 @@
+     },
+     "PY": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_es",
+@@ -978,6 +1142,8 @@
+     },
+     "QA": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -987,6 +1153,8 @@
+     },
+     "RO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -999,6 +1167,8 @@
+     },
+     "RS": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -1017,6 +1187,8 @@
+     },
+     "RW": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -1026,6 +1198,8 @@
+     },
+     "SA": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yandex_com",
+@@ -1035,6 +1209,8 @@
+     },
+     "SE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&duckduckgo",
+         "&brave",
+@@ -1047,6 +1223,8 @@
+     },
+     "SG": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_sg",
+@@ -1056,6 +1234,8 @@
+     },
+     "SI": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -1068,6 +1248,8 @@
+     },
+     "SK": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -1080,6 +1262,8 @@
+     },
+     "SV": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_es",
+@@ -1089,6 +1273,8 @@
+     },
+     "SY": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yandex_ru",
+@@ -1098,6 +1284,8 @@
+     },
+     "TH": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_th",
+@@ -1107,6 +1295,8 @@
+     },
+     "TN": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_fr",
+@@ -1116,6 +1306,8 @@
+     },
+     "TR": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_tr",
+         "&yahoo_tr",
+@@ -1125,6 +1317,8 @@
+     },
+     "TT": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -1134,6 +1328,8 @@
+     },
+     "TW": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yahoo_tw",
+         "&bing",
+@@ -1143,6 +1339,8 @@
+     },
+     "TZ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&duckduckgo",
+         "&bing",
+@@ -1152,6 +1350,8 @@
+     },
+     "UA": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_ru",
+         "&bing",
+@@ -1161,6 +1361,8 @@
+     },
+     "US": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -1170,6 +1372,8 @@
+     },
+     "UY": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_es",
+@@ -1179,6 +1383,8 @@
+     },
+     "VE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo_es",
+@@ -1188,6 +1394,8 @@
+     },
+     "VN": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&coccoc",
+         "&yahoo",
+@@ -1197,6 +1405,8 @@
+     },
+     "YE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -1206,6 +1416,8 @@
+     },
+     "ZA": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -1215,6 +1427,8 @@
+     },
+     "ZW": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo",
+@@ -1224,6 +1438,8 @@
+     },
+     "ZZ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&yahoo"
