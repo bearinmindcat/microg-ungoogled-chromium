@@ -362,6 +362,11 @@ grep -q 'CHROME_WEBSTORE_URL = "https://chromewebstore.google.com/"' \
   || { echo "FATAL: Java-side webstore URL still domain-substituted (domain_sub_2.list not filtered?)"; exit 1; }
 echo "extensions: layer verified"
 
+for _d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+  cp misc/app_icons/mipmap-${_d}/*.png "src/chrome/android/java/res_chromium_base/mipmap-${_d}/"
+done
+echo "icons: applied"
+
 
   ## Configure output folder
   export PATH=$OLD_PATH  # remove depot_tools from PATH
