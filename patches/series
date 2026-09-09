@@ -70,7 +70,7 @@ ungoogled-chromium-android/Disable-contextual-search.patch
 #ungoogled-chromium-android/Add-more-search-engines.patch
 #ungoogled-chromium-android/Add-folder-button-bookmark.patch
 #ungoogled-chromium-android/Enable-update-notification.patch
-ungoogled-chromium-android/Disable-homepage-by-default.patch
+#ungoogled-chromium-android/Disable-homepage-by-default.patch
 #ungoogled-chromium-android/Remove-UI-elements.patch
 ungoogled-chromium-android/Remove-ntp-sites.patch
 ungoogled-chromium-android/Add-save-data-flag.patch
