@@ -10,7 +10,7 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/S
 index f871db046ef1f..c56ee98599785 100644
 --- a/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java
-@@ -93,12 +93,9 @@ public class SyncSettingsUtils {
+@@ -93,12 +93,7 @@ public class SyncSettingsUtils {
  
      /** Returns the type of the sync error */
      public static @UserActionableError int getSyncError(@Nullable Profile profile) {
@@ -20,8 +20,6 @@ index f871db046ef1f..c56ee98599785 100644
 -            return UserActionableError.NONE;
 -        }
 -        return syncService.getUserActionableError();
-+        // microG FIX: Always return NONE to suppress "Verify it's you" warnings
-+        // microG doesn't support TrustedVault, but sync works fine without it
 +        return UserActionableError.NONE;
      }
  

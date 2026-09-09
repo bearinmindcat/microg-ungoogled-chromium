@@ -23,19 +23,13 @@ index 4b25e6f9f513e..9fdad89a6d329 100644
      SetState(AccountReconcilorState::kScheduled);
    }
  }
-@@ -445,9 +448,17 @@ void AccountReconcilor::StartReconcile(Trigger trigger) {
+@@ -445,9 +448,13 @@ void AccountReconcilor::StartReconcile(Trigger trigger) {
      return;
    }
  
--  // In the case of a forced reconciliation, we will not rely on ListAccounts,
--  // and consider the cookie jar to be empty.
+   // In the case of a forced reconciliation, we will not rely on ListAccounts,
+   // and consider the cookie jar to be empty.
 -  if (trigger_ == Trigger::kForcedReconcile) {
-+  // In the case of a forced reconciliation or when enabling reconcile (sign-in),
-+  // we will not rely on ListAccounts, and consider the cookie jar to be empty.
-+  // PATCH: Also include kEnableReconcile to fix re-sign-in with microG.
-+  // Without this, cached ListAccounts data would make the reconciler think
-+  // cookies are already set, skipping the Multilogin call needed for
-+  // google.com/youtube.com sign-in.
 +  LOG(WARNING) << "AccountReconcilor::StartReconcile: trigger=" << static_cast<int>(trigger_)
 +               << " (0=kUnknown, 1=kTokenChange, 2=kCookieChange, 3=kEnableReconcile, 4=kForcedReconcile)";
 +  if (trigger_ == Trigger::kForcedReconcile ||
@@ -91,12 +85,11 @@ diff --git a/components/signin/internal/identity_manager/account_tracker_service
 index 0947dbbe9e3a6..6bab3d4ed9eda 100644
 --- a/components/signin/internal/identity_manager/account_tracker_service.cc
 +++ b/components/signin/internal/identity_manager/account_tracker_service.cc
-@@ -291,11 +291,19 @@ void AccountTrackerService::SetAccountInfoFromUserInfo(
+@@ -291,11 +291,16 @@ void AccountTrackerService::SetAccountInfoFromUserInfo(
        PickAccountIdForAccount(fetched_user_info.gaia, fetched_user_info.email);
  
    // Whether the existing account in pref matches the fetched account.
 -  bool accounts_matching = user_info_copy.account_id == account_info.account_id;
-+  // MICROG FIX: Also match by email since microG may provide different account ID format
 +  bool accounts_matching =
 +      user_info_copy.account_id == account_info.account_id ||
 +      (user_info_copy.email == account_info.email && !account_info.email.empty());
@@ -104,8 +97,6 @@ index 0947dbbe9e3a6..6bab3d4ed9eda 100644
                              accounts_matching);
  
    if (accounts_matching) {
-+    // MICROG FIX: If account IDs differ but emails match, update user_info_copy
-+    // to use existing ID so UpdateWith() doesn't reject the update
 +    if (user_info_copy.account_id != account_info.account_id) {
 +      user_info_copy.account_id = account_info.account_id;
 +    }

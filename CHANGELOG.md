@@ -1,3 +1,12 @@
+# 150.0.7871.114-4
+* Fix the extensions Web Store link and extension updates/sync. The microG domain-substitution exclusion (`_mg_desub` in `build.sh`) was anchored `^(` and so never matched the `./`-prefixed entries in the second substitution list, leaving the Android Web Store URL (`UrlConstants.CHROME_WEBSTORE_URL`) and the update-manifest XML namespace (`safe_manifest_parser.cc`) rewritten to an unreachable `*.qjz9zk` host. The exclusion now also covers `extensions/browser/updater/`, `chrome/browser/extensions/updater/` and the Android `UrlConstants`, and the build asserts both strings survive. This also unblocks applying synced extensions (the update fetch can parse Google's response again).
+* chrome://extensions now renders with a desktop layout on Android (drops the injected mobile `viewport` meta), so the page no longer clips.
+* Add "Chrome Web Store" and "Opera add-ons" links to the extensions sidebar.
+
+# 150.0.7871.114-3
+* Extensions: add a "load .crx" button to the developer-mode drawer (ported from Ultimatum).
+* Extensions: de-substitute the Web Store URL and category link so they resolve instead of pointing at an invalid host.
+
 # 150.0.7871.114-1
 * Upstream update (v99.0.4844.51-1 to v150.0.7871.114)
 * Refreshed patches from bromite, cromite (bromite successor), & vanadium; doing my best to mirror the previous maintainers philosophy and patch structure

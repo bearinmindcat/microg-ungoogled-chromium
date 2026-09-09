@@ -25,7 +25,7 @@ new file mode 100644
 index 0000000000000..decb15e8c9ace
 --- /dev/null
 +++ b/chrome/browser/image_fetcher/android_native_image_decoder.cc
-@@ -0,0 +1,53 @@
+@@ -0,0 +1,49 @@
 +// Copyright 2025 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -51,18 +51,15 @@ index 0000000000000..decb15e8c9ace
 +    data_decoder::DataDecoder* data_decoder,
 +    image_fetcher::ImageDecodedCallback callback) {
 +
-+  // Decode on background thread to avoid blocking UI
 +  base::ThreadPool::PostTaskAndReplyWithResult(
 +      FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_VISIBLE},
 +      base::BindOnce(
 +          [](const std::string& data) -> gfx::Image {
 +            JNIEnv* env = AttachCurrentThread();
 +
-+            // Convert C++ byte array to Java byte[]
 +            ScopedJavaLocalRef<jbyteArray> j_image_data =
 +                base::android::ToJavaByteArray(env, data);
 +
-+            // Call Java decoder (namespace-qualified)
 +            ScopedJavaLocalRef<jobject> j_bitmap =
 +                image_fetcher::Java_NativeImageDecoder_decode(env, j_image_data);
 +
@@ -70,7 +67,6 @@ index 0000000000000..decb15e8c9ace
 +              return gfx::Image();
 +            }
 +
-+            // Convert Java Bitmap to SkBitmap
 +            gfx::JavaBitmap java_bitmap(j_bitmap);
 +            SkBitmap sk_bitmap = gfx::CreateSkBitmapFromJavaBitmap(java_bitmap);
 +
@@ -84,7 +80,7 @@ new file mode 100644
 index 0000000000000..f674eb56802e4
 --- /dev/null
 +++ b/chrome/browser/image_fetcher/android_native_image_decoder.h
-@@ -0,0 +1,29 @@
+@@ -0,0 +1,25 @@
 +// Copyright 2025 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -98,15 +94,11 @@ index 0000000000000..f674eb56802e4
 +#include "ui/gfx/geometry/size.h"
 +#include "ui/gfx/image/image.h"
 +
-+// Android-native image decoder that uses BitmapFactory via JNI.
-+// This avoids the sandboxed Blink decoder which crashes on microG builds
-+// due to V8 snapshot loading failures in isolated processes.
 +class AndroidNativeImageDecoder : public image_fetcher::ImageDecoder {
 + public:
 +  AndroidNativeImageDecoder();
 +  ~AndroidNativeImageDecoder() override;
 +
-+  // ImageDecoder implementation
 +  void DecodeImage(const std::string& image_data,
 +                   const gfx::Size& desired_image_frame_size,
 +                   data_decoder::DataDecoder* data_decoder,
@@ -169,7 +161,7 @@ new file mode 100644
 index 0000000000000..7672316e43728
 --- /dev/null
 +++ b/components/image_fetcher/android/java/src/org/chromium/components/image_fetcher/NativeImageDecoder.java
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,36 @@
 +// Copyright 2025 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -183,10 +175,6 @@ index 0000000000000..7672316e43728
 +import org.jni_zero.CalledByNative;
 +import org.jni_zero.JNINamespace;
 +
-+/**
-+ * Android-native image decoder using BitmapFactory.
-+ * Called from C++ via JNI to decode profile images without sandboxed processes.
-+ */
 +@JNINamespace("image_fetcher")
 +public class NativeImageDecoder {
 +    private static final String TAG = "cr_NativeImageDecoder";

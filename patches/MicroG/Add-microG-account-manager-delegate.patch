@@ -23,7 +23,7 @@ diff --git a/components/signin/public/android/java/src/org/chromium/components/s
 index 779a09fee674c..0d822e61c3c3c 100644
 --- a/components/signin/public/android/java/src/org/chromium/components/signin/AccountManagerFacadeProvider.java
 +++ b/components/signin/public/android/java/src/org/chromium/components/signin/AccountManagerFacadeProvider.java
-@@ -24,11 +24,10 @@ public class AccountManagerFacadeProvider {
+@@ -24,11 +24,7 @@ public class AccountManagerFacadeProvider {
          private static final AccountManagerFacade INSTANCE;
  
          static {
@@ -32,9 +32,6 @@ index 779a09fee674c..0d822e61c3c3c 100644
 -            if (delegate == null) {
 -                delegate = new NullAccountManagerDelegate();
 -            }
-+            // PATCH: Directly instantiate MicroGAccountManagerDelegate instead of using
-+            // ServiceLoader. The @ServiceImpl annotation processing doesn't generate
-+            // META-INF/services files in this build configuration, so ServiceLoader fails.
 +            AccountManagerDelegate delegate = new MicroGAccountManagerDelegate();
              INSTANCE = new AccountManagerFacadeImpl(delegate);
          }
@@ -44,7 +41,7 @@ new file mode 100644
 index 0000000000000..415ea116c6405
 --- /dev/null
 +++ b/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java
-@@ -0,0 +1,640 @@
+@@ -0,0 +1,600 @@
 +// Copyright 2025 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -117,8 +114,6 @@ index 0000000000000..415ea116c6405
 +
 +    private static final ConcurrentHashMap<String, String> sRealGaiaIdCache = new ConcurrentHashMap<>();
 +
-+    // Chromium's Log prefixes "cr_" and errorprone caps tags at 20 chars, so this
-+    // is deliberately shorter than TAG above. Grep logcat for "cr_MicroGAcctDeleg".
 +    private static final String LTAG = "MicroGAcctDeleg";
 +
 +    public MicroGAccountManagerDelegate() {
@@ -128,30 +123,6 @@ index 0000000000000..415ea116c6405
 +                REVANCED_ACCOUNT_TYPE.equals(mAccountType) ? "FOUND" : "NOT VISIBLE");
 +    }
 +
-+    /**
-+     * Re-types an Account handed down by Chromium to the account type microG actually
-+     * registers.
-+     *
-+     * <p>Chromium hardcodes the Google account type everywhere it builds an Account:
-+     * {@code AccountUtils.createAccountFromEmail()} does {@code new Account(email,
-+     * "com.google")}, and every sign-in path reaches the delegate through
-+     * {@code CoreAccountInfo.getAndroidAccountFrom()}, which calls it. microG's
-+     * authenticator registers its accounts under "app.revanced" instead, so a token or
-+     * capability request for a "com.google"-typed account refers to an account microG has
-+     * never heard of -- it fails, and the UI reports only "something went wrong".
-+     *
-+     * <p>The delegate is the boundary between Chromium's assumption and microG's reality,
-+     * so the translation belongs here rather than in AccountUtils (which is shared with
-+     * non-microG code paths).
-+     *
-+     * <p><b>Only use this for calls that go to the system {@link AccountManager}</b>
-+     * (hasFeatures / updateCredentials / confirmCredentials), where the type must match the
-+     * authenticator that actually registered the account. Do <b>not</b> use it for
-+     * {@code GoogleAuthUtil} calls: that API validates the type and throws
-+     * {@code IllegalArgumentException("Account type not supported")} for anything other
-+     * than "com.google". Because that is unchecked and the token fetch runs on a
-+     * ThreadPoolForeground thread, it crashes the whole browser rather than failing sign-in.
-+     */
 +    private Account toDelegateAccount(Account account) {
 +        if (account == null || mAccountType.equals(account.type)) {
 +            return account;
@@ -296,13 +267,6 @@ index 0000000000000..415ea116c6405
 +            throws AuthException {
 +        ThreadUtils.assertOnBackgroundThread();
 +
-+        // NOTE: pass the account through with its ORIGINAL "com.google" type.
-+        // GoogleAuthUtil validates the type and throws
-+        // "IllegalArgumentException: Account type not supported" for anything else --
-+        // it is a GMS client API contract, and microG honours it because it emulates
-+        // GMS. Do NOT "helpfully" re-type this to app.revanced: that throws, and
-+        // IllegalArgumentException is not caught below, so it kills the browser.
-+        // (Account type translation belongs only on the system AccountManager calls.)
 +        Log.i(LTAG, "getAccessToken: acct.type=%s scope=%s", account.type, authTokenScope);
 +        try {
 +            String token = GoogleAuthUtil.getTokenWithNotification(
@@ -329,10 +293,6 @@ index 0000000000000..415ea116c6405
 +                    ex,
 +                    new GoogleServiceAuthError(GoogleServiceAuthErrorState.CONNECTION_FAILED));
 +        } catch (RuntimeException ex) {
-+            // GoogleAuthUtil throws unchecked exceptions for contract violations, e.g.
-+            // IllegalArgumentException("Account type not supported"). Anything unchecked
-+            // escaping here runs on a ThreadPoolForeground thread and takes the whole
-+            // browser down. Convert to AuthException so sign-in fails, not the process.
 +            Log.e(LTAG, "getAccessToken: unchecked exception for scope %s", authTokenScope, ex);
 +            throw new AuthException(
 +                    "Unexpected error getting token for scope '" + authTokenScope + "'",
@@ -506,9 +466,6 @@ index 0000000000000..415ea116c6405
 +
 +    private String fetchRealGaiaIdSync(String accountEmail) {
 +        try {
-+            // Must stay GOOGLE_ACCOUNT_TYPE: this is handed to GoogleAuthUtil below,
-+            // which rejects any other type with IllegalArgumentException. See the note
-+            // in getAccessToken().
 +            Account account = new Account(accountEmail, GOOGLE_ACCOUNT_TYPE);
 +
 +            String token = null;

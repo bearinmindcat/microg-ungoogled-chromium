@@ -8,9 +8,6 @@ KS="${3:-$HOME/.android/debug.keystore}"; KSPASS="${4:-android}"
 NOSIGN=0; [ "${3:-}" = "--no-sign" ] && NOSIGN=1
 GMS="com.google.android.gms"; MICROG="app.revanced.android.gms"
 
-# Never let SDK discovery abort the script. Under `set -euo pipefail` a failing
-# glob here exits 2 before the first echo, so the caller sees a silent failure
-# with no diagnostic -- exactly what happened on the CI arm build.
 _sdk() {
   for _d in "src/third_party/android_sdk/public/build-tools" \
             "third_party/android_sdk/public/build-tools" \
@@ -64,7 +61,6 @@ echo "  out: $OUT"
 
 echo "[1/5] extracting"
 unzip -q "$IN" -d "$TMP/apk"
-# APK keeps classes*.dex at the root; an .aab keeps them under base/dex/
 mapfile -t DEXES < <(cd "$TMP/apk" && find . -name 'classes*.dex' -printf '%P\n' 2>/dev/null | sort -V)
 [ "${#DEXES[@]}" -gt 0 ] || { echo "  ERROR: no classes*.dex"; exit 1; }
 echo "  mode: $MODE, dex files: ${#DEXES[@]}"
@@ -90,9 +86,6 @@ if cnt:
     open(path,'w').write(s)
     print(cnt)
 else:
-    # Already redirected by an earlier run: release.sh rewrites the APK in place,
-    # so a resumed CI part re-patches an APK that is already correct. Report that
-    # distinctly (negative) instead of looking like a missing target.
     already=len(re.findall(r'const-string(?:/jumbo)? [vp][0-9]+, "%s"'%re.escape(micro), body))
     print(-already if already else 0)
 PY
@@ -125,10 +118,6 @@ echo "  redirected $TOTAL string(s) — availability checks left on real GMS (co
 
 echo "[3/5] reassembling"
 for dex in "${PATCHED_DEX[@]}"; do
-  # An .aab stores dex under <module>/dex/, so "$TMP/$dex.new" would need a
-  # directory that does not exist and smali fails just on the output path.
-  # Keep the output flat, and never discard smali's stderr -- swallowing it is
-  # why this failure reported no reason at all.
   _flat="$(echo "${dex%.dex}" | tr / _)"
   if ! $SMALI a "$TMP/sm_$_flat" -o "$TMP/new_$_flat.dex" 2>"$TMP/smali.err"; then
     echo "  ERROR: smali failed on $dex"
