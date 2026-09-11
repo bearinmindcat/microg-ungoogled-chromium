@@ -19,6 +19,7 @@ src-fix/fix-safebrowsing-state-enum-android.patch
 src-fix/fix-safebrowsing-bridge-android-stub.patch
 src-fix/fix-safebrowsing-prefs-lib-android.patch
 src-fix/fix-safebrowsing-suspicious-notification-android.patch
+src-fix/fix-safebrowsing-suspicious-site-dialog-152.patch
 src-fix/fix-android-pref-enum-signin-safebrowsing.patch
 src-fix/fix-android-read-prefs-registration.patch
 src-fix/fix-android-token-service-seed-before-load.patch

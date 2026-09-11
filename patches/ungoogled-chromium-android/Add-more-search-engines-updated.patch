@@ -1,6 +1,3 @@
-Subject: Add more search engines (noai_duckduckgo, degoog), rebased for M150
-
-diff --git a/components/search_engines/search_engine_type.h b/components/search_engines/search_engine_type.h
 --- a/components/search_engines/search_engine_type.h
 +++ b/components/search_engines/search_engine_type.h
 @@ -100,6 +100,8 @@ enum SearchEngineType {
@@ -12,7 +9,6 @@ diff --git a/components/search_engines/search_engine_type.h b/components/search_
    SEARCH_ENGINE_MAX  // Bounding value needed for UMA histogram macro.
  };
  // LINT.ThenChange(//tools/metrics/histograms/enums.xml:OmniboxSearchEngineType)
-diff --git a/third_party/search_engines_data/resources/definitions/prepopulated_engines.json b/third_party/search_engines_data/resources/definitions/prepopulated_engines.json
 --- a/third_party/search_engines_data/resources/definitions/prepopulated_engines.json
 +++ b/third_party/search_engines_data/resources/definitions/prepopulated_engines.json
 @@ -22,7 +22,7 @@
@@ -48,37 +44,63 @@ diff --git a/third_party/search_engines_data/resources/definitions/prepopulated_
      "duckduckgo": {
        "name": "DuckDuckGo",
        "keyword": "duckduckgo.com",
-diff --git a/third_party/search_engines_data/resources/definitions/regional_settings.json b/third_party/search_engines_data/resources/definitions/regional_settings.json
 --- a/third_party/search_engines_data/resources/definitions/regional_settings.json
 +++ b/third_party/search_engines_data/resources/definitions/regional_settings.json
-@@ -153,6 +153,8 @@
+@@ -132,6 +132,8 @@
    "elements": {
      "AE": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -162,6 +164,8 @@
+@@ -141,6 +143,8 @@
+     },
+     "AF": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -150,6 +154,8 @@
      },
      "AL": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
+         "&yep",
+@@ -159,6 +165,8 @@
+     },
+     "AM": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_ru",
+         "&brave",
+@@ -168,6 +176,8 @@
+     },
+     "AO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -171,6 +175,8 @@
+@@ -177,6 +187,8 @@
      },
      "AR": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_ar",
-@@ -180,6 +186,8 @@
+@@ -186,6 +198,8 @@
      },
      "AT": {
        "search_engines": [
@@ -87,25 +109,43 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -192,6 +200,8 @@
+@@ -198,6 +212,8 @@
      },
      "AU": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&bing",
-         "&yahoo_au",
-@@ -201,6 +211,8 @@
+         "&brave",
+         "&duckduckgo",
+@@ -207,6 +223,8 @@
+     },
+     "AZ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_ru",
+         "&brave",
+@@ -216,6 +234,8 @@
      },
      "BA": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&yep",
+         "&brave",
+@@ -225,6 +245,8 @@
+     },
+     "BD": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -210,6 +222,8 @@
+@@ -234,6 +256,8 @@
      },
      "BE": {
        "search_engines": [
@@ -114,7 +154,16 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -222,6 +236,8 @@
+@@ -246,6 +270,8 @@
+     },
+     "BF": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -255,6 +281,8 @@
      },
      "BG": {
        "search_engines": [
@@ -123,52 +172,34 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -234,6 +250,8 @@
+@@ -267,6 +295,8 @@
      },
-     "BH": {
+     "BJ": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -243,6 +261,8 @@
-     },
-     "BI": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo",
-@@ -252,6 +272,8 @@
-     },
-     "BN": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo",
-@@ -261,6 +283,8 @@
+@@ -276,6 +306,8 @@
      },
      "BO": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -270,6 +294,8 @@
+@@ -285,6 +317,8 @@
      },
      "BR": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_br",
-@@ -279,6 +305,8 @@
+@@ -294,6 +328,8 @@
      },
      "BY": {
        "search_engines": [
@@ -177,43 +208,70 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&yandex_by",
          "&bing",
-@@ -288,6 +316,8 @@
-     },
-     "BZ": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&duckduckgo",
-@@ -297,6 +327,8 @@
+@@ -303,6 +339,8 @@
      },
      "CA": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -312,6 +350,8 @@
+     },
+     "CD": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
          "&bing",
-         "&yahoo_ca",
-@@ -306,6 +338,8 @@
+         "&brave",
+@@ -321,6 +361,8 @@
+     },
+     "CG": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -330,6 +372,8 @@
      },
      "CH": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&bing",
+         "&brave",
          "&duckduckgo",
-@@ -315,6 +349,8 @@
+@@ -339,6 +383,8 @@
+     },
+     "CI": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -348,6 +394,8 @@
      },
      "CL": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_cl",
-@@ -324,6 +360,8 @@
+@@ -357,6 +405,8 @@
+     },
+     "CM": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -366,6 +416,8 @@
      },
      "CN": {
        "search_engines": [
@@ -222,25 +280,34 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&baidu",
          "&bing",
          "&sogou",
-@@ -333,6 +371,8 @@
+@@ -375,6 +427,8 @@
      },
      "CO": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_co",
-@@ -342,6 +382,8 @@
+@@ -384,6 +438,8 @@
      },
      "CR": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -351,6 +393,8 @@
+@@ -393,6 +449,8 @@
+     },
+     "CU": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -402,6 +460,8 @@
      },
      "CY": {
        "search_engines": [
@@ -249,7 +316,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -363,6 +407,8 @@
+@@ -414,6 +474,8 @@
      },
      "CZ": {
        "search_engines": [
@@ -258,7 +325,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&seznam",
          "&brave",
-@@ -375,6 +421,8 @@
+@@ -426,6 +488,8 @@
      },
      "DE": {
        "search_engines": [
@@ -267,7 +334,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&duckduckgo",
          "&brave",
-@@ -387,6 +435,8 @@
+@@ -438,6 +502,8 @@
      },
      "DK": {
        "search_engines": [
@@ -276,25 +343,34 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -399,6 +449,8 @@
+@@ -450,6 +516,8 @@
      },
      "DO": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -417,6 +469,8 @@
+@@ -459,6 +527,8 @@
+     },
+     "DZ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -468,6 +538,8 @@
      },
      "EC": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_es",
-@@ -426,6 +480,8 @@
+@@ -477,6 +549,8 @@
      },
      "EE": {
        "search_engines": [
@@ -303,16 +379,16 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -438,6 +494,8 @@
+@@ -489,6 +563,8 @@
      },
      "EG": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -447,6 +505,8 @@
+@@ -498,6 +574,8 @@
      },
      "ES": {
        "search_engines": [
@@ -321,7 +397,16 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -459,6 +519,8 @@
+@@ -510,6 +588,8 @@
+     },
+     "ET": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -519,6 +599,8 @@
      },
      "FI": {
        "search_engines": [
@@ -330,16 +415,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -471,6 +533,8 @@
-     },
-     "FO": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo_uk",
-@@ -480,6 +544,8 @@
+@@ -531,6 +613,8 @@
      },
      "FR": {
        "search_engines": [
@@ -348,16 +424,52 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&ecosia",
-@@ -492,6 +558,8 @@
+@@ -543,6 +627,8 @@
      },
      "GB": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&duckduckgo",
+         "&brave",
+@@ -552,6 +638,8 @@
+     },
+     "GE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_com",
+         "&brave",
+@@ -561,6 +649,8 @@
+     },
+     "GH": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
          "&bing",
-         "&yahoo_uk",
-@@ -501,6 +569,8 @@
+         "&brave",
+@@ -570,6 +660,8 @@
+     },
+     "GM": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&duckduckgo",
+@@ -579,6 +671,8 @@
+     },
+     "GN": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&duckduckgo",
+@@ -588,6 +682,8 @@
      },
      "GR": {
        "search_engines": [
@@ -366,34 +478,34 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -513,6 +583,8 @@
+@@ -600,6 +696,8 @@
      },
      "GT": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -522,6 +594,8 @@
+@@ -609,6 +707,8 @@
      },
      "HK": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&bing",
-         "&yahoo_hk",
-@@ -531,6 +605,8 @@
+         "&baidu",
+         "&brave",
+@@ -618,6 +718,8 @@
      },
      "HN": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -540,6 +616,8 @@
+@@ -627,6 +729,8 @@
      },
      "HR": {
        "search_engines": [
@@ -402,7 +514,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -552,6 +630,8 @@
+@@ -639,6 +743,8 @@
      },
      "HU": {
        "search_engines": [
@@ -411,16 +523,16 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&bing",
-@@ -564,6 +644,8 @@
+@@ -651,6 +757,8 @@
      },
      "ID": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&yandex_com",
+         "&brave",
          "&bing",
-@@ -573,6 +655,8 @@
+@@ -660,6 +768,8 @@
      },
      "IE": {
        "search_engines": [
@@ -429,43 +541,43 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&duckduckgo",
          "&brave",
-@@ -585,6 +669,8 @@
+@@ -672,6 +782,8 @@
      },
      "IL": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yandex_ru",
-@@ -594,6 +680,8 @@
+@@ -681,6 +793,8 @@
      },
      "IN": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_in",
-@@ -603,6 +691,8 @@
+@@ -690,6 +804,8 @@
      },
      "IQ": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yandex_tr",
-@@ -612,6 +702,8 @@
+@@ -699,6 +815,8 @@
      },
      "IR": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -621,6 +713,8 @@
+@@ -708,6 +826,8 @@
      },
      "IS": {
        "search_engines": [
@@ -474,7 +586,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&duckduckgo",
          "&brave",
-@@ -633,6 +727,8 @@
+@@ -720,6 +840,8 @@
      },
      "IT": {
        "search_engines": [
@@ -483,25 +595,16 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&bing",
-@@ -645,6 +741,8 @@
-     },
-     "JM": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo",
-@@ -654,6 +752,8 @@
+@@ -732,6 +854,8 @@
      },
      "JO": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -663,6 +763,8 @@
+@@ -741,6 +865,8 @@
      },
      "JP": {
        "search_engines": [
@@ -510,16 +613,34 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&yahoo_jp",
          "&bing",
-@@ -672,6 +774,8 @@
+@@ -750,6 +876,8 @@
      },
      "KE": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -681,6 +785,8 @@
+@@ -759,6 +887,8 @@
+     },
+     "KG": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_ru",
+         "&brave",
+@@ -768,6 +898,8 @@
+     },
+     "KH": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -777,6 +909,8 @@
      },
      "KR": {
        "search_engines": [
@@ -527,17 +648,8 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
 +        "&degoog",
          "&google",
          "&naver",
-         "&bing",
-@@ -690,6 +796,8 @@
-     },
-     "KW": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yandex_tr",
-@@ -699,6 +807,8 @@
+         "&daum",
+@@ -786,6 +920,8 @@
      },
      "KZ": {
        "search_engines": [
@@ -545,17 +657,26 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
 +        "&degoog",
          "&google",
          "&yandex_kz",
+         "&brave",
+@@ -795,6 +931,8 @@
+     },
+     "LA": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
          "&bing",
-@@ -708,6 +818,8 @@
+@@ -804,6 +942,8 @@
      },
      "LB": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -717,6 +829,8 @@
+@@ -813,6 +953,8 @@
      },
      "LI": {
        "search_engines": [
@@ -564,7 +685,16 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&duckduckgo",
          "&brave",
-@@ -729,6 +843,8 @@
+@@ -825,6 +967,8 @@
+     },
+     "LK": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -834,6 +978,8 @@
      },
      "LT": {
        "search_engines": [
@@ -573,7 +703,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -741,6 +857,8 @@
+@@ -846,6 +992,8 @@
      },
      "LU": {
        "search_engines": [
@@ -582,7 +712,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -753,6 +871,8 @@
+@@ -858,6 +1006,8 @@
      },
      "LV": {
        "search_engines": [
@@ -591,34 +721,25 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -765,6 +885,8 @@
+@@ -870,6 +1020,8 @@
      },
      "LY": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yandex_tr",
-@@ -774,6 +896,8 @@
+@@ -879,6 +1031,8 @@
      },
      "MA": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_fr",
-@@ -783,6 +907,8 @@
-     },
-     "MC": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo_fr",
-@@ -792,6 +918,8 @@
+@@ -888,6 +1042,8 @@
      },
      "MD": {
        "search_engines": [
@@ -626,26 +747,71 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
 +        "&degoog",
          "&google",
          "&yandex_ru",
-         "&bing",
-@@ -801,6 +929,8 @@
+         "&brave",
+@@ -897,6 +1053,8 @@
      },
      "ME": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&yep",
+         "&brave",
+@@ -906,6 +1064,8 @@
+     },
+     "MG": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
          "&bing",
-         "&yandex_ru",
-@@ -810,6 +940,8 @@
+         "&brave",
+@@ -915,6 +1075,8 @@
      },
      "MK": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&yep",
+         "&brave",
+@@ -924,6 +1086,8 @@
+     },
+     "ML": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
          "&bing",
-         "&yahoo",
-@@ -819,6 +951,8 @@
+         "&duckduckgo",
+@@ -933,6 +1097,8 @@
+     },
+     "MM": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -942,6 +1108,8 @@
+     },
+     "MN": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&naver",
+@@ -951,6 +1119,8 @@
+     },
+     "MO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&baidu",
+         "&brave",
+@@ -960,6 +1130,8 @@
      },
      "MT": {
        "search_engines": [
@@ -654,34 +820,52 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&bing",
-@@ -831,6 +965,8 @@
+@@ -972,6 +1144,8 @@
      },
      "MX": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_mx",
-@@ -840,6 +976,8 @@
+@@ -981,6 +1155,8 @@
      },
      "MY": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_my",
-@@ -849,6 +987,8 @@
+@@ -990,6 +1166,8 @@
      },
-     "NI": {
+     "MZ": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
          "&bing",
-         "&yahoo",
-@@ -858,6 +998,8 @@
+         "&brave",
+@@ -999,6 +1177,8 @@
+     },
+     "NE": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -1008,6 +1188,8 @@
+     },
+     "NG": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -1017,6 +1199,8 @@
      },
      "NL": {
        "search_engines": [
@@ -690,7 +874,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&duckduckgo",
          "&brave",
-@@ -870,6 +1012,8 @@
+@@ -1029,6 +1213,8 @@
      },
      "NO": {
        "search_engines": [
@@ -699,61 +883,52 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&duckduckgo",
          "&brave",
-@@ -882,6 +1026,8 @@
+@@ -1041,6 +1227,8 @@
+     },
+     "NP": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -1050,6 +1238,8 @@
      },
      "NZ": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&bing",
-         "&yahoo_nz",
-@@ -891,6 +1037,8 @@
-     },
-     "OM": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo",
-@@ -900,6 +1048,8 @@
-     },
-     "PA": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo_es",
-@@ -909,6 +1059,8 @@
+         "&brave",
+         "&duckduckgo",
+@@ -1059,6 +1249,8 @@
      },
      "PE": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_pe",
-@@ -918,6 +1070,8 @@
+@@ -1068,6 +1260,8 @@
      },
      "PH": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_ph",
-@@ -927,6 +1081,8 @@
+@@ -1077,6 +1271,8 @@
      },
      "PK": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -936,6 +1092,8 @@
+@@ -1086,6 +1282,8 @@
      },
      "PL": {
        "search_engines": [
@@ -762,16 +937,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -948,6 +1106,8 @@
-     },
-     "PR": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo",
-@@ -957,6 +1117,8 @@
+@@ -1098,6 +1296,8 @@
      },
      "PT": {
        "search_engines": [
@@ -780,25 +946,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&bing",
-@@ -969,6 +1131,8 @@
-     },
-     "PY": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo_es",
-@@ -978,6 +1142,8 @@
-     },
-     "QA": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo",
-@@ -987,6 +1153,8 @@
+@@ -1110,6 +1310,8 @@
      },
      "RO": {
        "search_engines": [
@@ -807,34 +955,43 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -999,6 +1167,8 @@
+@@ -1122,6 +1324,8 @@
      },
      "RS": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&bing",
-         "&yahoo",
-@@ -1017,6 +1187,8 @@
+         "&brave",
+         "&yep",
+@@ -1131,6 +1335,8 @@
      },
-     "RW": {
+     "RU": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&bing",
-         "&yahoo",
-@@ -1026,6 +1198,8 @@
+         "&yandex_ru",
+         "&duckduckgo",
+@@ -1140,6 +1346,8 @@
      },
      "SA": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yandex_com",
-@@ -1035,6 +1209,8 @@
+@@ -1149,6 +1357,8 @@
+     },
+     "SD": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&duckduckgo",
+@@ -1158,6 +1368,8 @@
      },
      "SE": {
        "search_engines": [
@@ -843,16 +1000,16 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&duckduckgo",
          "&brave",
-@@ -1047,6 +1223,8 @@
+@@ -1170,6 +1382,8 @@
      },
      "SG": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&bing",
-         "&yahoo_sg",
-@@ -1056,6 +1234,8 @@
+         "&brave",
+         "&baidu",
+@@ -1179,6 +1393,8 @@
      },
      "SI": {
        "search_engines": [
@@ -861,7 +1018,7 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -1068,6 +1248,8 @@
+@@ -1191,6 +1407,8 @@
      },
      "SK": {
        "search_engines": [
@@ -870,43 +1027,97 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
          "&google",
          "&brave",
          "&duckduckgo",
-@@ -1080,6 +1262,8 @@
+@@ -1203,6 +1421,8 @@
+     },
+     "SL": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -1212,6 +1432,8 @@
+     },
+     "SN": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -1221,6 +1443,8 @@
+     },
+     "SO": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&brave",
+         "&bing",
+@@ -1230,6 +1454,8 @@
      },
      "SV": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_es",
-@@ -1089,6 +1273,8 @@
+@@ -1239,6 +1465,8 @@
      },
-     "SY": {
+     "TD": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
          "&bing",
-         "&yandex_ru",
-@@ -1098,6 +1284,8 @@
+         "&brave",
+@@ -1248,6 +1476,8 @@
+     },
+     "TG": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&bing",
+         "&brave",
+@@ -1257,6 +1487,8 @@
      },
      "TH": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_th",
-@@ -1107,6 +1295,8 @@
+@@ -1266,6 +1498,8 @@
+     },
+     "TJ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_ru",
+         "&brave",
+@@ -1275,6 +1509,8 @@
+     },
+     "TM": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_ru",
+         "&brave",
+@@ -1284,6 +1520,8 @@
      },
      "TN": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_fr",
-@@ -1116,6 +1306,8 @@
+@@ -1293,6 +1531,8 @@
      },
      "TR": {
        "search_engines": [
@@ -914,35 +1125,26 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
 +        "&degoog",
          "&google",
          "&yandex_tr",
-         "&yahoo_tr",
-@@ -1125,6 +1317,8 @@
-     },
-     "TT": {
-       "search_engines": [
-+        "&noai_duckduckgo",
-+        "&degoog",
-         "&google",
-         "&bing",
-         "&yahoo",
-@@ -1134,6 +1328,8 @@
+         "&brave",
+@@ -1302,6 +1542,8 @@
      },
      "TW": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&yahoo_tw",
-         "&bing",
-@@ -1143,6 +1339,8 @@
+         "&brave",
+         "&baidu",
+@@ -1311,6 +1553,8 @@
      },
      "TZ": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&duckduckgo",
          "&bing",
-@@ -1152,6 +1350,8 @@
+         "&brave",
+@@ -1320,6 +1564,8 @@
      },
      "UA": {
        "search_engines": [
@@ -950,26 +1152,44 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
 +        "&degoog",
          "&google",
          "&yandex_ru",
+         "&brave",
+@@ -1329,6 +1575,8 @@
+     },
+     "UG": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
          "&bing",
-@@ -1161,6 +1361,8 @@
+         "&brave",
+@@ -1338,6 +1586,8 @@
      },
      "US": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
-         "&bing",
-         "&yahoo",
-@@ -1170,6 +1372,8 @@
+         "&duckduckgo",
+         "&brave",
+@@ -1347,6 +1597,8 @@
      },
      "UY": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo_es",
-@@ -1179,6 +1383,8 @@
+@@ -1356,6 +1608,8 @@
+     },
+     "UZ": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yandex_ru",
+         "&brave",
+@@ -1365,6 +1619,8 @@
      },
      "VE": {
        "search_engines": [
@@ -977,8 +1197,8 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
 +        "&degoog",
          "&google",
          "&bing",
-         "&yahoo_es",
-@@ -1188,6 +1394,8 @@
+         "&brave",
+@@ -1374,6 +1630,8 @@
      },
      "VN": {
        "search_engines": [
@@ -986,8 +1206,17 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
 +        "&degoog",
          "&google",
          "&coccoc",
-         "&yahoo",
-@@ -1197,6 +1405,8 @@
+         "&brave",
+@@ -1383,6 +1641,8 @@
+     },
+     "XK": {
+       "search_engines": [
++        "&noai_duckduckgo",
++        "&degoog",
+         "&google",
+         "&yep",
+         "&brave",
+@@ -1392,6 +1652,8 @@
      },
      "YE": {
        "search_engines": [
@@ -995,17 +1224,17 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
 +        "&degoog",
          "&google",
          "&bing",
-         "&yahoo",
-@@ -1206,6 +1416,8 @@
+         "&brave",
+@@ -1401,6 +1663,8 @@
      },
      "ZA": {
        "search_engines": [
 +        "&noai_duckduckgo",
 +        "&degoog",
          "&google",
+         "&brave",
          "&bing",
-         "&yahoo",
-@@ -1215,6 +1427,8 @@
+@@ -1410,6 +1674,8 @@
      },
      "ZW": {
        "search_engines": [
@@ -1013,8 +1242,8 @@ diff --git a/third_party/search_engines_data/resources/definitions/regional_sett
 +        "&degoog",
          "&google",
          "&bing",
-         "&yahoo",
-@@ -1224,6 +1438,8 @@
+         "&brave",
+@@ -1419,6 +1685,8 @@
      },
      "ZZ": {
        "search_engines": [

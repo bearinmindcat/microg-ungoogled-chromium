@@ -23,3 +23,7 @@
 /LOCKED_BASE_READY
 /out/
 releases/
+
+*.log
+*.bak150
+*.pre-tailfix

@@ -1,5 +1,17 @@
 author: bearinmindcat <bearincrypto@gmail.com>
 
+--- a/components/assist_ranker/ranker_url_fetcher.cc
++++ b/components/assist_ranker/ranker_url_fetcher.cc
+@@ -2,6 +2,9 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
++// dead code left by the ungoogled patches
++#pragma clang diagnostic ignored "-Wunreachable-code"
++
+ #include "components/assist_ranker/ranker_url_fetcher.h"
+ 
+ #include <optional>
 --- a/components/crash/core/app/crashpad.cc
 +++ b/components/crash/core/app/crashpad.cc
 @@ -2,6 +2,9 @@
@@ -24,18 +36,6 @@ author: bearinmindcat <bearincrypto@gmail.com>
  #include "components/domain_reliability/uploader.h"
  
  #include <utility>
---- a/components/assist_ranker/ranker_url_fetcher.cc
-+++ b/components/assist_ranker/ranker_url_fetcher.cc
-@@ -2,6 +2,9 @@
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
- 
-+// dead code left by the ungoogled patches
-+#pragma clang diagnostic ignored "-Wunreachable-code"
-+
- #include "components/assist_ranker/ranker_url_fetcher.h"
- 
- #include <optional>
 --- a/components/themes/ntp_background_service.cc
 +++ b/components/themes/ntp_background_service.cc
 @@ -2,6 +2,9 @@
