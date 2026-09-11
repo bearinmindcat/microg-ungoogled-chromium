@@ -1,7 +1,7 @@
 diff --git a/chrome/browser/extensions/api/BUILD.gn b/chrome/browser/extensions/api/BUILD.gn
 --- a/chrome/browser/extensions/api/BUILD.gn
 +++ b/chrome/browser/extensions/api/BUILD.gn
-@@ -54,6 +54,7 @@ group("api_implementations") {
+@@ -53,6 +53,7 @@
      "//chrome/browser/extensions/api/reading_list",
      "//chrome/browser/extensions/api/runtime",
      "//chrome/browser/extensions/api/search",
@@ -9,8 +9,8 @@ diff --git a/chrome/browser/extensions/api/BUILD.gn b/chrome/browser/extensions/
      "//chrome/browser/extensions/api/tab_capture",
      "//chrome/browser/extensions/api/tab_groups",
      "//chrome/browser/extensions/api/web_navigation",
-@@ -77,7 +78,6 @@ group("api_implementations") {
-       "//chrome/browser/extensions/api/networking_private",
+@@ -77,7 +78,6 @@
+       "//chrome/browser/extensions/api/passwords_private",
        "//chrome/browser/extensions/api/resources_private",
        "//chrome/browser/extensions/api/safe_browsing_private",
 -      "//chrome/browser/extensions/api/settings_overrides",
@@ -36,7 +36,7 @@ diff --git a/chrome/browser/extensions/api/api_browser_context_keyed_service_fac
  #include "chrome/browser/extensions/api/settings_private/settings_private_event_router_factory.h"
  #include "chrome/browser/extensions/api/side_panel/side_panel_service.h"
  #include "components/safe_browsing/buildflags.h"
-@@ -106,6 +106,7 @@ void EnsureApiBrowserContextKeyedServiceFactoriesBuilt() {
+@@ -106,6 +106,7 @@
    extensions::TabsWindowsAPI::GetFactoryInstance();
    extensions::WebNavigationAPI::GetFactoryInstance();
  
@@ -44,7 +44,7 @@ diff --git a/chrome/browser/extensions/api/api_browser_context_keyed_service_fac
  #if BUILDFLAG(ENABLE_EXTENSIONS)
    extensions::ActivityLogAPI::GetFactoryInstance();
    extensions::AutofillPrivateEventRouterFactory::GetInstance();
-@@ -138,7 +139,6 @@ void EnsureApiBrowserContextKeyedServiceFactoriesBuilt() {
+@@ -138,7 +139,6 @@
    extensions::SafeBrowsingPrivateEventRouterFactory::GetInstance();
  #endif
    extensions::SettingsPrivateEventRouterFactory::GetInstance();
@@ -67,7 +67,7 @@ diff --git a/chrome/browser/extensions/api/settings_overrides/BUILD.gn b/chrome/
 diff --git a/chrome/common/extensions/api/_manifest_features.json b/chrome/common/extensions/api/_manifest_features.json
 --- a/chrome/common/extensions/api/_manifest_features.json
 +++ b/chrome/common/extensions/api/_manifest_features.json
-@@ -22,8 +22,7 @@
+@@ -17,8 +17,7 @@
    },
    "chrome_settings_overrides": {
      "channel": "stable",
@@ -75,5 +75,5 @@ diff --git a/chrome/common/extensions/api/_manifest_features.json b/chrome/commo
 -    "platforms": ["win", "mac"]
 +    "extension_types": ["extension"]
    },
-   "content_scripts": [
-     {
+   "file_browser_handlers": {
+     "channel": "stable",

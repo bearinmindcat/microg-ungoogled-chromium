@@ -1,15 +1,15 @@
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java b/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java
 --- a/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java
-@@ -129,6 +129,7 @@
+@@ -131,6 +131,7 @@
  import org.chromium.chrome.browser.data_sharing.ui.versioning.VersioningMessageBanner;
  import org.chromium.chrome.browser.device.DeviceClassManager;
  import org.chromium.chrome.browser.device_lock.DeviceLockActivityLauncherImpl;
 +import org.chromium.chrome.browser.desktop_site.DesktopSiteUtils;
- import org.chromium.chrome.browser.dom_distiller.ReaderModeManager;
  import org.chromium.chrome.browser.download.DownloadNotificationService;
  import org.chromium.chrome.browser.download.DownloadOpenSource;
-@@ -1583,10 +1584,31 @@
+ import org.chromium.chrome.browser.download.DownloadUtils;
+@@ -1624,10 +1625,31 @@
          }
      }
  
@@ -44,7 +44,7 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedAct
 diff --git a/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java b/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
 --- a/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
 +++ b/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
-@@ -362,6 +362,9 @@ public final class ChromePreferenceKeys {
+@@ -382,6 +382,9 @@
      public static final String DEVICE_LOCK_SHOW_ALERT_IF_REMOVED =
              "Chrome.DeviceLock.ShowAlertIfRemoved";
  
@@ -54,10 +54,10 @@ diff --git a/chrome/browser/preferences/android/java/src/org/chromium/chrome/bro
      public static final String DOWNLOAD_AUTO_RESUMPTION_ATTEMPT_LEFT = "ResumptionAttemptLeft";
      public static final String DOWNLOAD_FOREGROUND_SERVICE_OBSERVERS = "ForegroundServiceObservers";
      public static final String DOWNLOAD_IS_DOWNLOAD_HOME_ENABLED =
-@@ -1361,6 +1364,7 @@ public final class ChromePreferenceKeys {
-                 USB_NOTIFICATION_IDS,
-                 USER_ENABLED_DESKTOP_SITE_GLOBAL_SETTING_PREFERENCE_KEY,
+@@ -1390,6 +1393,7 @@
+                 VERTICAL_TABS_COLLAPSED,
                  VERTICAL_TABS_ENABLED,
+                 VERTICAL_TABS_ENABLED_TIMESTAMP,
 +                WEBSTORE_DESKTOP_SITE_SEEDED,
                  WEB_SIGNIN_ACCOUNT_PICKER_ACTIVE_DISMISSAL_COUNT,
                  WINDOW_CONTROLS_OVERLAY_ENABLED_PACKAGES);

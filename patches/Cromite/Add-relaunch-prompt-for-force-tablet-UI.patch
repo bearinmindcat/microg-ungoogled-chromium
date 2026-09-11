@@ -88,16 +88,12 @@
  import org.chromium.build.annotations.NullMarked;
  import org.chromium.build.annotations.Nullable;
  import org.chromium.components.browser_ui.settings.SettingsNavigation;
-@@ -46,6 +48,12 @@ public interface AccessibilitySettingsDe
+@@ -45,6 +47,8 @@
+ 
      BooleanPreferenceDelegate getForceTabletUIDelegate();
  
-     /**
-+     * Invites the user to relaunch the browser so a setting that is only read during startup can
-+     * take effect. Embedders that cannot show the invitation may leave this as a no-op.
-+     */
 +    default void requestRestart(@Nullable Activity activity) {}
 +
-+    /**
+     /**
       * @return boolean value specifying if the Image Descriptions user setting should be shown.
       */
-     boolean shouldShowImageDescriptionsSetting();

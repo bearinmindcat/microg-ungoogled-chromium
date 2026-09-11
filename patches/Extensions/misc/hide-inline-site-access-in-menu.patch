@@ -1,7 +1,7 @@
 diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemViewBinder.java b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemViewBinder.java
 --- a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemViewBinder.java
 +++ b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemViewBinder.java
-@@ -80,7 +80,7 @@ public class ExtensionsMenuItemViewBinder {
+@@ -80,7 +80,7 @@
          } else if (key == ExtensionsMenuItemProperties.SITE_ACCESS_TOGGLE_STATUS) {
              @Status int status = model.get(ExtensionsMenuItemProperties.SITE_ACCESS_TOGGLE_STATUS);
              MaterialSwitchWithText toggle = view.findViewById(R.id.extensions_menu_item_toggle);
@@ -10,7 +10,7 @@ diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/brow
              toggle.setEnabled(status == Status.ENABLED);
              // Force the view to be focusable for accessibility even when disabled,
              // so screen readers can navigate to it.
-@@ -110,7 +110,7 @@ public class ExtensionsMenuItemViewBinder {
+@@ -109,7 +109,7 @@
              View enterpriseIcon =
                      view.findViewById(R.id.extensions_menu_item_site_permissions_enterprise_icon);
  
@@ -18,4 +18,4 @@ diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/brow
 +            layout.setVisibility(View.GONE);
              boolean isEnabled = status == Status.ENABLED;
              layout.setEnabled(isEnabled);
-             button.setEnabled(isEnabled);
+             icon.setEnabled(isEnabled);

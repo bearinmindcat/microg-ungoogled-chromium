@@ -18,8 +18,8 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebConte
 +            maybeApplyDesktopSiteSetting(navigation);
              if (!navigation.isSameDocument()) {
                  mTab.didStartPageLoad(navigation.getUrl());
-             }
-@@ -294,6 +297,36 @@
+                 mTab.setNavigationStartMs(navigation.getNavigationStartMs());
+@@ -295,6 +298,36 @@
              }
          }
  

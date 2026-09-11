@@ -7,11 +7,10 @@ Gaia ID than Google does, and without this the account is dropped on
 restart and sign-in does not persist.
 ---
 diff --git a/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java b/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
-index 31ac0eba8b42e..843be51f3da02 100644
 --- a/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
 +++ b/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
-@@ -179,6 +179,12 @@ class SigninManagerImpl implements SigninManager, AccountsChangeObserver {
-                     accounts, CoreAccountInfo.getIdFrom(primaryAccountInfo));
+@@ -171,6 +171,12 @@
+             seedThenReloadAllAccountsFromSystem(accounts, primaryAccountInfo.getId());
              return;
          }
 +        if (AccountUtils.findAccountByEmail(accounts, primaryAccountInfo.getEmail()) != null) {
@@ -22,4 +21,4 @@ index 31ac0eba8b42e..843be51f3da02 100644
 +        }
          if (isOperationInProgress()) {
              // Re-check whether there's still a primary account after the current operation.
-             runAfterOperationInProgress(this::onCoreAccountInfosChanged);
+             runAfterOperationInProgress(this::onAccountsChanged);

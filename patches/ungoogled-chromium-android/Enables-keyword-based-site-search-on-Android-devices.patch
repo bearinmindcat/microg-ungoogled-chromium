@@ -1,6 +1,6 @@
 --- a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
 +++ b/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
-@@ -84,11 +84,11 @@ class UrlBarMediator implements UrlBarTe
+@@ -84,11 +84,6 @@
          mModel.set(UrlBarProperties.RICH_TEXT_CHANGE_LISTENER, this::onRichTextChanged);
          mModel.set(UrlBarProperties.KEY_DOWN_LISTENER, keyDownListener);
          mModel.set(UrlBarProperties.SHOW_HINT_TEXT, true);
@@ -9,11 +9,6 @@
 -                    UrlBarProperties.MANAGE_SEARCH_ENGINES_CALLBACK,
 -                    this::onManageSiteSearchClicked);
 -        }
-+        // if (OmniboxFeatures.sOmniboxSiteSearch.isEnabled()) {
-+        //     mModel.set(
-+        //             UrlBarProperties.MANAGE_SEARCH_ENGINES_CALLBACK,
-+        //             this::onManageSiteSearchClicked);
-+        // }
          setBrandedColorScheme(BrandedColorScheme.APP_DEFAULT);
          pushTextToModel(/* originChanged= */ false);
      }

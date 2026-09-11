@@ -155,7 +155,7 @@ index 0000000000000..415ea116c6405
 +                            return;
 +                        }
 +                        mLastAccountChangeTime = now;
-+                        assumeNonNull(mObserver).onCoreAccountInfosChanged();
++                        assumeNonNull(mObserver).onAccountsChanged();
 +                    }
 +                };
 +        IntentFilter accountsChangedIntentFilter = new IntentFilter();

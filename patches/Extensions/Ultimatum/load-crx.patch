@@ -1,135 +1,7 @@
-diff --git a/chrome/common/extensions/api/developer_private.webidl b/chrome/common/extensions/api/developer_private.webidl
---- a/chrome/common/extensions/api/developer_private.webidl
-+++ b/chrome/common/extensions/api/developer_private.webidl
-@@ -659,8 +659,13 @@
-   // Loads a user-selected unpacked item.
-   // |options|: Additional configuration parameters.
-   // |PromiseValue|: error
-   static Promise<LoadError?> loadUnpacked(optional LoadUnpackedOptions options);
- 
-+  // Loads a user-selected crx item.
-+  // |options|: Additional configuration parameters.
-+  // |PromiseValue|: error
-+  static Promise<LoadError?> loadCRX(optional LoadUnpackedOptions options);
-+
-   // Installs the file that was dragged and dropped onto the associated
-   // page.
-   static Promise<undefined> installDroppedFile();
-diff --git a/extensions/browser/extension_function_histogram_value.h b/extensions/browser/extension_function_histogram_value.h
---- a/extensions/browser/extension_function_histogram_value.h
-+++ b/extensions/browser/extension_function_histogram_value.h
-@@ -2040,4 +2040,5 @@
-   CONTEXTUALTASKSPRIVATE_LAUNCHPANELINNEWTAB = 1975,
-+  DEVELOPERPRIVATE_LOADCRX = 1976,
-   // Last entry: Add new entries above, then run:
-   // tools/metrics/histograms/update_extension_histograms.py
-   ENUM_BOUNDARY
-diff --git a/chrome/browser/resources/extensions/toolbar.html.ts b/chrome/browser/resources/extensions/toolbar.html.ts
---- a/chrome/browser/resources/extensions/toolbar.html.ts
-+++ b/chrome/browser/resources/extensions/toolbar.html.ts
-@@ -33,6 +33,12 @@
-   </extensions-pack-dialog>` : ''}
- <div id="devDrawer" ?expanded="${this.expanded_}">
-   <div id="buttonStrip">
-+    <if expr="is_android">
-+      <cr-button ?hidden="${!this.canLoadUnpacked_()}" id="loadCRX"
-+          @click="${this.onLoadCRXClick_}">
-+        load .crx
-+      </cr-button>
-+    </if>
-     <cr-button ?hidden="${!this.canLoadUnpacked_()}" id="loadUnpacked"
-         @click="${this.onLoadUnpackedClick_}">
-       $i18n{toolbarLoadUnpacked}
-diff --git a/chrome/browser/resources/extensions/toolbar.ts b/chrome/browser/resources/extensions/toolbar.ts
---- a/chrome/browser/resources/extensions/toolbar.ts
-+++ b/chrome/browser/resources/extensions/toolbar.ts
-@@ -29,6 +29,8 @@
-   /** Opens the dialog to load unpacked extensions. */
-   loadUnpacked(): Promise<boolean>;
- 
-+  loadCRX(): Promise<boolean>;
-+
-   /** Updates all extensions. */
-   updateAllExtensions(extensions: chrome.developerPrivate.ExtensionInfo[]):
-       Promise<void>;
-@@ -39,6 +41,10 @@
-   loadUnpacked() {
-     return Promise.resolve(true);
-   }
-+
-+  loadCRX() {
-+    return Promise.resolve(true);
-+  }
-   updateAllExtensions(_extensions: chrome.developerPrivate.ExtensionInfo[]) {
-     return Promise.resolve();
-   }
-@@ -184,6 +190,21 @@
-         .then((success) => {
-           if (success) {
-             const toastManager = getToastManager();
-+            toastManager.duration = TOAST_DURATION_MS;
-+            toastManager.show(this.i18n('toolbarLoadUnpackedDone'));
-+          }
-+        })
-+        .catch(loadError => {
-+          this.fire('load-error', loadError);
-+        });
-+    chrome.metricsPrivate.recordUserAction('Options_LoadUnpackedExtension');
-+  }
-+
-+  protected onLoadCRXClick_() {
-+    this.delegate.loadCRX()
-+        .then((success) => {
-+          if (success) {
-+            const toastManager = getToastManager();
-             toastManager.duration = TOAST_DURATION_MS;
-             toastManager.show(this.i18n('toolbarLoadUnpackedDone'));
-           }
-diff --git a/chrome/browser/resources/extensions/service.ts b/chrome/browser/resources/extensions/service.ts
---- a/chrome/browser/resources/extensions/service.ts
-+++ b/chrome/browser/resources/extensions/service.ts
-@@ -360,6 +360,23 @@
-     return this.loadUnpackedHelper_();
-   }
- 
-+  loadCRX(): Promise<boolean> {
-+    return chrome.developerPrivate
-+        .loadCRX({failQuietly: true, populateError: true})
-+        .then(loadError => {
-+          if (loadError) {
-+            throw loadError;
-+          }
-+          return true;
-+        })
-+        .catch(error => {
-+          if (error.message !== 'File selection was canceled.') {
-+            throw error;
-+          }
-+          return false;
-+        });
-+  }
-+
-   retryLoadUnpacked(retryGuid?: string): Promise<boolean> {
-     // Attempt to load an unpacked extension, optionally as another attempt at
-     // a previously-specified load.
-diff --git a/extensions/browser/extension_util.cc b/extensions/browser/extension_util.cc
---- a/extensions/browser/extension_util.cc
-+++ b/extensions/browser/extension_util.cc
-@@ -584,10 +584,6 @@
- }
- 
- bool IsExtensionDownload(const download::DownloadItem& download_item) {
--  if (download_item.GetTargetDisposition() ==
--      download::DownloadItem::TARGET_DISPOSITION_PROMPT) {
--    return false;
--  }
- 
-   if (download_item.GetMimeType() == Extension::kMimeType ||
-       UserScript::IsURLUserScript(download_item.GetURL(),
 diff --git a/chrome/browser/download/download_crx_util.cc b/chrome/browser/download/download_crx_util.cc
 --- a/chrome/browser/download/download_crx_util.cc
 +++ b/chrome/browser/download/download_crx_util.cc
-@@ -86,9 +86,7 @@
+@@ -89,9 +89,7 @@
  }  // namespace
  
  bool OffStoreInstallAllowedByPrefs(Profile* profile, const DownloadItem& item) {
@@ -140,7 +12,7 @@ diff --git a/chrome/browser/download/download_crx_util.cc b/chrome/browser/downl
  }
  
  // Tests can call this method to inject a mock ExtensionInstallPrompt
-@@ -116,10 +114,7 @@
+@@ -119,10 +117,7 @@
  }
  
  bool IsTrustedExtensionDownload(Profile* profile, const DownloadItem& item) {
@@ -152,46 +24,10 @@ diff --git a/chrome/browser/download/download_crx_util.cc b/chrome/browser/downl
  }
  
  std::unique_ptr<base::AutoReset<bool>> OverrideOffstoreInstallAllowedForTesting(
-diff --git a/chrome/browser/extensions/api/developer_private/developer_private_functions.h b/chrome/browser/extensions/api/developer_private/developer_private_functions.h
---- a/chrome/browser/extensions/api/developer_private/developer_private_functions.h
-+++ b/chrome/browser/extensions/api/developer_private/developer_private_functions.h
-@@ -362,6 +362,32 @@
-   std::optional<ui::SelectedFileInfo> selected_file_for_testing_;
- };
- 
-+class DeveloperPrivateLoadCRXFunction
-+    : public DeveloperPrivateAPIFunction,
-+      public ui::SelectFileDialog::Listener {
-+ public:
-+  DECLARE_EXTENSION_FUNCTION("developerPrivate.loadCRX",
-+                             DEVELOPERPRIVATE_LOADCRX)
-+  DeveloperPrivateLoadCRXFunction();
-+
-+  // ui::SelectFileDialog::Listener:
-+  void FileSelected(const ui::SelectedFileInfo& file, int index) override;
-+  void FileSelectionCanceled() override;
-+
-+ protected:
-+  ~DeveloperPrivateLoadCRXFunction() override;
-+
-+  // DeveloperPrivateAPIFunction:
-+  ResponseAction Run() override;
-+
-+ private:
-+  void ShowSelectFileDialog();
-+  void StartFileLoad(const base::FilePath file_path);
-+  void Finish(ResponseValue response_value);
-+
-+  scoped_refptr<ui::SelectFileDialog> select_file_dialog_;
-+};
-+
- class DeveloperPrivateInstallDroppedFileFunction
-     : public DeveloperPrivateAPIFunction {
-  public:
 diff --git a/chrome/browser/extensions/api/developer_private/developer_private_functions.cc b/chrome/browser/extensions/api/developer_private/developer_private_functions.cc
 --- a/chrome/browser/extensions/api/developer_private/developer_private_functions.cc
 +++ b/chrome/browser/extensions/api/developer_private/developer_private_functions.cc
-@@ -1012,6 +1012,81 @@
+@@ -1018,6 +1018,81 @@
    Release();  // Balanced in Run().
  }
  
@@ -273,10 +109,174 @@ diff --git a/chrome/browser/extensions/api/developer_private/developer_private_f
  DeveloperPrivateInstallDroppedFileFunction::
      DeveloperPrivateInstallDroppedFileFunction() = default;
  DeveloperPrivateInstallDroppedFileFunction::
+diff --git a/chrome/browser/extensions/api/developer_private/developer_private_functions.h b/chrome/browser/extensions/api/developer_private/developer_private_functions.h
+--- a/chrome/browser/extensions/api/developer_private/developer_private_functions.h
++++ b/chrome/browser/extensions/api/developer_private/developer_private_functions.h
+@@ -362,6 +362,32 @@
+   std::optional<ui::SelectedFileInfo> selected_file_for_testing_;
+ };
+ 
++class DeveloperPrivateLoadCRXFunction
++    : public DeveloperPrivateAPIFunction,
++      public ui::SelectFileDialog::Listener {
++ public:
++  DECLARE_EXTENSION_FUNCTION("developerPrivate.loadCRX",
++                             DEVELOPERPRIVATE_LOADCRX)
++  DeveloperPrivateLoadCRXFunction();
++
++  // ui::SelectFileDialog::Listener:
++  void FileSelected(const ui::SelectedFileInfo& file, int index) override;
++  void FileSelectionCanceled() override;
++
++ protected:
++  ~DeveloperPrivateLoadCRXFunction() override;
++
++  // DeveloperPrivateAPIFunction:
++  ResponseAction Run() override;
++
++ private:
++  void ShowSelectFileDialog();
++  void StartFileLoad(const base::FilePath file_path);
++  void Finish(ResponseValue response_value);
++
++  scoped_refptr<ui::SelectFileDialog> select_file_dialog_;
++};
++
+ class DeveloperPrivateInstallDroppedFileFunction
+     : public DeveloperPrivateAPIFunction {
+  public:
+diff --git a/chrome/browser/resources/extensions/service.ts b/chrome/browser/resources/extensions/service.ts
+--- a/chrome/browser/resources/extensions/service.ts
++++ b/chrome/browser/resources/extensions/service.ts
+@@ -388,6 +388,23 @@
+     return this.loadUnpackedHelper_();
+   }
+ 
++  loadCRX(): Promise<boolean> {
++    return chrome.developerPrivate
++        .loadCRX({failQuietly: true, populateError: true})
++        .then(loadError => {
++          if (loadError) {
++            throw loadError;
++          }
++          return true;
++        })
++        .catch(error => {
++          if (error.message !== 'File selection was canceled.') {
++            throw error;
++          }
++          return false;
++        });
++  }
++
+   retryLoadUnpacked(retryGuid?: string): Promise<boolean> {
+     // Attempt to load an unpacked extension, optionally as another attempt at
+     // a previously-specified load.
+diff --git a/chrome/browser/resources/extensions/toolbar.html.ts b/chrome/browser/resources/extensions/toolbar.html.ts
+--- a/chrome/browser/resources/extensions/toolbar.html.ts
++++ b/chrome/browser/resources/extensions/toolbar.html.ts
+@@ -33,6 +33,12 @@
+   </extensions-pack-dialog>` : ''}
+ <div id="devDrawer" ?expanded="${this.expanded_}">
+   <div id="buttonStrip">
++    <if expr="is_android">
++      <cr-button ?hidden="${!this.canLoadUnpacked_()}" id="loadCRX"
++          @click="${this.onLoadCRXClick_}">
++        load .crx
++      </cr-button>
++    </if>
+     <cr-button ?hidden="${!this.canLoadUnpacked_()}" id="loadUnpacked"
+         @click="${this.onLoadUnpackedClick_}">
+       $i18n{toolbarLoadUnpacked}
+diff --git a/chrome/browser/resources/extensions/toolbar.ts b/chrome/browser/resources/extensions/toolbar.ts
+--- a/chrome/browser/resources/extensions/toolbar.ts
++++ b/chrome/browser/resources/extensions/toolbar.ts
+@@ -29,6 +29,8 @@
+   /** Opens the dialog to load unpacked extensions. */
+   loadUnpacked(): Promise<boolean>;
+ 
++  loadCRX(): Promise<boolean>;
++
+   /** Updates all extensions. */
+   updateAllExtensions(extensions: chrome.developerPrivate.ExtensionInfo[]):
+       Promise<void>;
+@@ -39,6 +41,10 @@
+   loadUnpacked() {
+     return Promise.resolve(true);
+   }
++
++  loadCRX() {
++    return Promise.resolve(true);
++  }
+   updateAllExtensions(_extensions: chrome.developerPrivate.ExtensionInfo[]) {
+     return Promise.resolve();
+   }
+@@ -184,6 +190,21 @@
+         .then((success) => {
+           if (success) {
+             const toastManager = getToastManager();
++            toastManager.duration = TOAST_DURATION_MS;
++            toastManager.show(this.i18n('toolbarLoadUnpackedDone'));
++          }
++        })
++        .catch(loadError => {
++          this.fire('load-error', loadError);
++        });
++    chrome.metricsPrivate.recordUserAction('Options_LoadUnpackedExtension');
++  }
++
++  protected onLoadCRXClick_() {
++    this.delegate.loadCRX()
++        .then((success) => {
++          if (success) {
++            const toastManager = getToastManager();
+             toastManager.duration = TOAST_DURATION_MS;
+             toastManager.show(this.i18n('toolbarLoadUnpackedDone'));
+           }
+diff --git a/chrome/common/extensions/api/developer_private.webidl b/chrome/common/extensions/api/developer_private.webidl
+--- a/chrome/common/extensions/api/developer_private.webidl
++++ b/chrome/common/extensions/api/developer_private.webidl
+@@ -663,6 +663,11 @@
+   // |PromiseValue|: error
+   static Promise<LoadError?> loadUnpacked(optional LoadUnpackedOptions options);
+ 
++  // Loads a user-selected crx item.
++  // |options|: Additional configuration parameters.
++  // |PromiseValue|: error
++  static Promise<LoadError?> loadCRX(optional LoadUnpackedOptions options);
++
+   // Installs the file that was dragged and dropped onto the associated
+   // page.
+   static Promise<undefined> installDroppedFile();
+diff --git a/extensions/browser/extension_function_histogram_value.h b/extensions/browser/extension_function_histogram_value.h
+--- a/extensions/browser/extension_function_histogram_value.h
++++ b/extensions/browser/extension_function_histogram_value.h
+@@ -2042,6 +2042,7 @@
+   DICTATIONPRIVATE_SETSTREAMSTATE = 1977,
+   WEBREQUESTINTERNAL_EVENTHANDLINGDONE = 1978,
+   DICTATIONPRIVATE_UPDATEAUDIOLEVEL = 1979,
++  DEVELOPERPRIVATE_LOADCRX = 1976,
+   // Last entry: Add new entries above, then run:
+   // tools/metrics/histograms/update_extension_histograms.py
+   ENUM_BOUNDARY
+diff --git a/extensions/browser/extension_util.cc b/extensions/browser/extension_util.cc
+--- a/extensions/browser/extension_util.cc
++++ b/extensions/browser/extension_util.cc
+@@ -585,10 +585,6 @@
+ }
+ 
+ bool IsExtensionDownload(const download::DownloadItem& download_item) {
+-  if (download_item.GetTargetDisposition() ==
+-      download::DownloadItem::TARGET_DISPOSITION_PROMPT) {
+-    return false;
+-  }
+ 
+   if (download_item.GetMimeType() == Extension::kMimeType) {
+     return !ShouldDownloadAsRegularFile();
 diff --git a/tools/typescript/definitions/developer_private.d.ts b/tools/typescript/definitions/developer_private.d.ts
 --- a/tools/typescript/definitions/developer_private.d.ts
 +++ b/tools/typescript/definitions/developer_private.d.ts
-@@ -452,6 +452,8 @@
+@@ -454,6 +454,8 @@
        export function installDroppedFile(): Promise<void>;
        export function loadUnpacked(options: LoadUnpackedOptions):
            Promise<LoadError|null>;

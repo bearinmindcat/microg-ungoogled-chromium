@@ -5,6 +5,9 @@
 * Adapted patches for 152 API changes: CreatePrefProxyConfigTrackerOfProfile gained a PolicyService argument, buildModelForStandardMenuItem moved to AppMenuItemUtils
 * Dropped hunks made obsolete by upstream deletions in fix-degoogle-core-werror-batch2-150
 * Added src-fix/fix-safebrowsing-suspicious-site-dialog-152 for the new chrome/browser/ui/android/safe_browsing code that calls the removed suspicious site controller
+* microG: ported the extensions layer (android-extensions-support, enable-extension-in-incognito, add-quick-extension-toggle-menu, load-crx, webstore-desktop-site, opera-addons-icon) to 152; every patch in every series now applies with strict `git apply` (no fuzz)
+* microG: Fix-native-account-consistency reduced to its two functional hunks (dropped the debug logging, which also wrote OAuth token prefixes to logcat)
+* microG: GMS-removal patches stay disabled (required for microG sign-in)
 
 # 150.0.7871.114-4
 * Fix the extensions Web Store link and extension updates/sync. The microG domain-substitution exclusion (`_mg_desub` in `build.sh`) was anchored `^(` and so never matched the `./`-prefixed entries in the second substitution list, leaving the Android Web Store URL (`UrlConstants.CHROME_WEBSTORE_URL`) and the update-manifest XML namespace (`safe_manifest_parser.cc`) rewritten to an unreachable `*.qjz9zk` host. The exclusion now also covers `extensions/browser/updater/`, `chrome/browser/extensions/updater/` and the Android `UrlConstants`, and the build asserts both strings survive. This also unblocks applying synced extensions (the update fetch can parse Google's response again).
