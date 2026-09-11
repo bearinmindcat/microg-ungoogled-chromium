@@ -1,8 +1,14 @@
-# ungoogled-chromium-android
+<h1><img width="100" src="misc/app_icons/mipmap-xxxhdpi/app_icon.png" alt="microg-ungoogled-chromium-android" align="absmiddle"> microg-ungoogled-chromium-android</h1>
 
 Please see [CHANGELOG](CHANGELOG.md) for latest updates.
 
-*A lightweight approach to removing Google web service dependency*
+Why ungoogled-chromium instead of chrome or chromium?
+
+Fundamentally the microg project was built to replace google services, giving the user more control over what exactly they want their google services to see and touch on their devices. Using ungoogled-chromium as the base and allowing the minimum google services to see only, what's needed for microg & sync to work.
+
+Though this project was built off of ungoogled-chromium there are necessary google services that had to be brought back in order for everything to become functions which I will go over below.
+
+In the future I will possibly release builds with the patches just made for chromium & chrome respectively or morphe/revanced patches for their respective apps if that's easier than using ungoogled.
 
 *Note: this is an **Android** build.*
 
@@ -14,6 +20,7 @@ For more information on `ungoogled-chromium`, please visit the original repo: [u
 
 * [Objectives](#objectives)
 * [Differences from ungoogled-chromium](#differences-from-ungoogled-chromium)
+* [Misc UGC patch removals & patch additions](#misc-ugc-patch-removals--patch-additions)
 * [Limitations](#limitations)
 * [Platforms and Versions](#platforms-and-versions)
 * [Building Instructions](#building-instructions)
@@ -76,6 +83,33 @@ In descending order of significance (i.e. most important objective first):
    * Various compiling time enhancements
 * All Google play and Google service related blobs are removed. This includes Firebase, GCM (Google Cloud Messaging), GMS (Google Mobile Services) and bridge to Google Play.
 * Releases are built for `arm` and `arm64`, plus an `.aab` for `arm64`. There is no `x86` or `x64` build.
+
+## Misc UGC patch removals & patch additions 
+
+*These are the additions & removals from ungoogled-chromium-android.*
+
+<details>
+  <summary>show list</summary>
+  
+* Ungoogled-chromium patches disabled:
+   * `disable-gaia.patch` (allows microg accounts to authenticate)
+   * `disable-gcm.patch` (sync notifications)
+   * `disable-webstore-urls.patch` (sync notifications)
+   * `0005-disable-default-extensions.patch` (web store installer & extensions)
+   * misc domain substitutions
+* Microg patches added
+   * Account manager reads from `app.revanced.android.gms` instead of play services
+   * Sign-in email fallbacks
+   * Signature spoofing with microg tokens
+* Extension support & misc extension accessibility changes
+* Borrowed from Cromite:
+   * Darken websites checkbox in themes
+   * Relaunch prompt when toggling force tablet UI
+* Other misc changes:
+   * Home page and home button on by default
+   * Additional search engines & keyword site search
+
+</details>
 
 ## Limitations
 
