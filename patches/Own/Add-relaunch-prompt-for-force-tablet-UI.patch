@@ -1,3 +1,8 @@
+subject: Add relaunch prompt for force tablet UI
+
+Force tablet UI is only read at startup, so offer to relaunch when it is toggled.
+Extends Cromite's Add-option-to-force-tablet-UI, which does not prompt.
+---
 --- a/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java
 @@ -4,14 +4,22 @@

@@ -1,10 +1,7 @@
 subject: Add package signature spoofing to manifest
-author: bearinmindcat <bearincrypto@gmail.com>
-date: Tue, 22 Jul 2026
 
-Declare FAKE_PACKAGE_SIGNATURE, the app.revanced.android.gms <queries>
-entry and the spoofing metadata, so microG hands out tokens as if the
-caller were com.android.chrome.
+Declare FAKE_PACKAGE_SIGNATURE, the app.revanced.android.gms <queries> entry and the
+spoofing metadata, so microG issues tokens as if the caller were com.android.chrome.
 ---
 diff --git a/chrome/android/java/AndroidManifest.xml b/chrome/android/java/AndroidManifest.xml
 --- a/chrome/android/java/AndroidManifest.xml

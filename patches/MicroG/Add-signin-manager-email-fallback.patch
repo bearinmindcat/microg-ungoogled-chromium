@@ -1,10 +1,7 @@
 subject: Add signin manager email fallback
-author: bearinmindcat <bearincrypto@gmail.com>
-date: Tue, 22 Jul 2026
 
-Match accounts by email as well as Gaia ID. microG issues a different
-Gaia ID than Google does, and without this the account is dropped on
-restart and sign-in does not persist.
+Match accounts by email as well as Gaia ID: microG issues a different Gaia ID, and
+without this sign-in does not survive a restart.
 ---
 diff --git a/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java b/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
 --- a/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java

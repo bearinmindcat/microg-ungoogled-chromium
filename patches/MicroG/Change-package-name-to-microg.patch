@@ -1,18 +1,7 @@
 subject: Change package name to microG variant
-author: bearinmindcat <bearincrypto@gmail.com>
-date: Tue, 22 Jul 2026
 
-Append .microg to the package name so this build installs alongside the stock
-ungoogled-chromium-android build instead of replacing it, and rename the app so
-the two are distinguishable in the launcher.
-
-The channel suffix is applied first, so the result is
-org.ungoogled.chromium.stable.microg.
-
-This does not affect microG itself: the token request identifies this app by the
-app.revanced.android.gms.SPOOFED_PACKAGE_NAME meta-data (com.android.chrome), not
-by the real package name. Note that microG grants signature spoofing per app, so
-after a rename the new package needs spoofing enabled in microG settings again.
+Append .microg so this installs alongside the stock build. microG grants signature
+spoofing per package, so after the rename it must be re-enabled in microG settings.
 ---
 --- a/chrome/android/chrome_public_apk_tmpl.gni
 +++ b/chrome/android/chrome_public_apk_tmpl.gni

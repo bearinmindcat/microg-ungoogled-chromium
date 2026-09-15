@@ -10,3 +10,4 @@ settings-overrides-android.patch
 allow-non-webstore-crx3.patch
 opera-store-user-agent.patch
 crx-install-prompt-android.patch
+Add-relaunch-prompt-for-force-tablet-UI.patch

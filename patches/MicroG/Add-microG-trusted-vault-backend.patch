@@ -1,10 +1,7 @@
 subject: Add microG trusted vault backend
-author: bearinmindcat <bearincrypto@gmail.com>
-date: Tue, 22 Jul 2026
 
-Provide a TrustedVault backend so sync encryption works without Play
-Services, and suppress the "Verify it's you" prompt that cannot be
-satisfied through microG.
+Provide a TrustedVault backend so sync encryption works without Play Services, and
+suppress the "Verify it's you" prompt microG cannot satisfy.
 ---
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java b/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java
 index f871db046ef1f..c56ee98599785 100644

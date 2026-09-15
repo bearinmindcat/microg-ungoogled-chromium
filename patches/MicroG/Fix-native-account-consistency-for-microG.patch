@@ -1,12 +1,8 @@
 subject: Fix native account consistency for microG
-author: bearinmindcat <bearincrypto@gmail.com>
-date: Tue, 22 Jul 2026
 
-Match accounts by email as well as Gaia ID when reconciling the pref with the
-fetched user info, and treat the cookie jar as empty when reconciliation is
-triggered by kEnableReconcile so microG accounts get a Multilogin instead of
-relying on ListAccounts.
-
+Match accounts by email as well as Gaia ID when reconciling, and treat the cookie jar
+as empty on kEnableReconcile so microG accounts get a Multilogin.
+---
 diff --git a/components/signin/core/browser/account_reconcilor.cc b/components/signin/core/browser/account_reconcilor.cc
 --- a/components/signin/core/browser/account_reconcilor.cc
 +++ b/components/signin/core/browser/account_reconcilor.cc

@@ -1,9 +1,7 @@
 subject: Add native image decoder for profile icons
-author: bearinmindcat <bearincrypto@gmail.com>
-date: Tue, 22 Jul 2026
 
-Decode profile avatars with the Android native image decoder so the
-signed-in account shows its picture instead of a text monogram.
+Decode profile avatars natively so the signed-in account shows its picture instead
+of a text monogram.
 ---
 diff --git a/chrome/browser/image_fetcher/BUILD.gn b/chrome/browser/image_fetcher/BUILD.gn
 index a9fdfc6aeade9..8cc69360b1189 100644

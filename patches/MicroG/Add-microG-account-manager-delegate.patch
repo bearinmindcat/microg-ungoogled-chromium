@@ -1,11 +1,7 @@
 subject: Add microG account manager delegate
-author: bearinmindcat <bearincrypto@gmail.com>
-date: Tue, 22 Jul 2026
 
-Route account enumeration and token requests through ReVanced microG
-instead of Google Play Services. Accounts are read from the
-app.revanced.android.gms auth ContentProvider; tokens come from
-GoogleAuthUtil, which is redirected to microG post-build.
+Read accounts from the app.revanced.android.gms ContentProvider and take tokens
+from GoogleAuthUtil, which is redirected to microG post-build.
 ---
 diff --git a/components/signin/public/android/BUILD.gn b/components/signin/public/android/BUILD.gn
 index a4e9abfcd173b..4a62c6218687b 100644
