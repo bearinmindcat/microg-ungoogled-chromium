@@ -27,3 +27,4 @@ releases/
 *.log
 *.bak150
 *.pre-tailfix
+/docs/API-KEYS.md

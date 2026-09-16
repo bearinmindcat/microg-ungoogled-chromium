@@ -10,6 +10,8 @@ Though this project was built off of ungoogled-chromium there are necessary goog
 
 In the future I will possibly release builds with the patches just made for chromium & chrome respectively or morphe/revanced patches for their respective apps if that's easier than using ungoogled.
 
+*In order for the sync to function you need microg gmscore ([microg/GmsCore](https://github.com/microg/GmsCore)) or gms services spoofed with revanced services.*
+
 *Note: this is an **Android** build.*
 
 **Help is welcome!**
