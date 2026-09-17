@@ -1,0 +1,72 @@
+subject: Fix supervised-account lock on extensions
+
+microG cannot answer account-capability queries, so a supervised-account flag can be set
+in error, locking developer mode and extension installs.
+---
+diff --git a/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java b/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java
+--- a/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java
++++ b/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java
+@@ -332,6 +332,9 @@
+     @Override
+     public int hasCapability(@Nullable Account account, String capability) {
+         if (account != null && capability != null) {
++            if (isParentalControlsCapability(capability)) {
++                return AccountManagerDelegate.CapabilityResponse.EXCEPTION;
++            }
+             try {
+                 boolean hasFeature = mAccountManager
+                         .hasFeatures(toDelegateAccount(account), new String[] {capability},
+@@ -345,6 +348,11 @@
+         return AccountManagerDelegate.CapabilityResponse.EXCEPTION;
+     }
+ 
++    private static boolean isParentalControlsCapability(String capability) {
++        String name = AccountCapabilitiesConstants.IS_SUBJECT_TO_PARENTAL_CONTROLS_CAPABILITY_NAME;
++        return name.equals(capability) || name.endsWith("/" + capability);
++    }
++
+     @SuppressLint("MissingPermission")
+     @Override
+     public void createAddAccountIntent(
+diff --git a/chrome/browser/supervised_user/supervised_user_browser_utils.cc b/chrome/browser/supervised_user/supervised_user_browser_utils.cc
+--- a/chrome/browser/supervised_user/supervised_user_browser_utils.cc
++++ b/chrome/browser/supervised_user/supervised_user_browser_utils.cc
+@@ -96,11 +96,7 @@
+ }
+ 
+ bool AreExtensionsPermissionsEnabled(Profile* profile) {
+-#if BUILDFLAG(ENABLE_EXTENSIONS_CORE)
+-  return profile->IsChild();
+-#else
+   return false;
+-#endif  // BUILDFLAG(ENABLE_EXTENSIONS_CORE)
+ }
+ 
+ bool ShouldContentSkipParentAllowlistFiltering(content::WebContents* contents) {
+diff --git a/components/supervised_user/core/browser/child_account_service.cc b/components/supervised_user/core/browser/child_account_service.cc
+--- a/components/supervised_user/core/browser/child_account_service.cc
++++ b/components/supervised_user/core/browser/child_account_service.cc
+@@ -49,6 +49,12 @@
+ void ChildAccountService::Init() {
+   identity_manager_->AddObserver(this);
+ 
++  if (identity_manager_->GetPrimaryAccountInfo(signin::ConsentLevel::kSignin)
++          .IsEmpty() &&
++      IsSubjectToParentalControls(user_prefs_.get())) {
++    DisableParentalControls(user_prefs_.get());
++  }
++
+   std::move(check_user_child_status_callback_)
+       .Run(supervised_user::IsSubjectToParentalControls(user_prefs_.get()));
+ 
+diff --git a/chrome/browser/policy/configuration_policy_handler_list_factory.cc b/chrome/browser/policy/configuration_policy_handler_list_factory.cc
+--- a/chrome/browser/policy/configuration_policy_handler_list_factory.cc
++++ b/chrome/browser/policy/configuration_policy_handler_list_factory.cc
+@@ -3440,7 +3440,6 @@
+       key::kExtensionUnpublishedAvailability,
+       extensions::pref_names::kExtensionUnpublishedAvailability,
+       /*min=*/0, /*max=*/1, /*clamp=*/false));
+-  handlers->AddHandler(std::make_unique<ExtensionDeveloperModePolicyHandler>());
+   handlers->AddHandler(
+       std::make_unique<enterprise_reporting::ExtensionRequestPolicyHandler>());
+ #endif  // BUILDFLAG(ENABLE_EXTENSIONS_CORE)
