@@ -1,0 +1,201 @@
+subject: Add pure black theme for OLED panels
+
+A switch in Settings > Appearance > Theme paints the browser true black instead of
+Material dark grey, so OLED pixels are switched off rather than lit. Dark mode only,
+and applied when an Activity is themed, so a snackbar offers to relaunch.
+---
+diff --git a/components/browser_ui/styles/android/java/res/values/themes.xml b/components/browser_ui/styles/android/java/res/values/themes.xml
+--- a/components/browser_ui/styles/android/java/res/values/themes.xml
++++ b/components/browser_ui/styles/android/java/res/values/themes.xml
+@@ -44,4 +44,24 @@
+         <!-- Click event uses dark mode colors -->
+         <item name="colorControlHighlight">@color/ripple_material_dark</item>
+     </style>
++    <style name="ThemeOverlay.BrowserUI.PureBlack" parent="">
++        <item name="android:colorBackground">@android:color/black</item>
++        <item name="colorSurface">@android:color/black</item>
++        <item name="colorSurfaceDim">@android:color/black</item>
++        <item name="colorSurfaceContainerLowest">@android:color/black</item>
++        <item name="colorSurfaceContainerLow">@android:color/black</item>
++        <item name="colorSurfaceContainer">@android:color/black</item>
++        <item name="colorSurfaceContainerHigh">#121212</item>
++        <item name="colorSurfaceBright">#1A1A1A</item>
++        <item name="colorSurfaceContainerHighest">#1A1A1A</item>
++        <item name="elevationOverlayEnabled">false</item>
++        <item name="colorOnSurface">@android:color/white</item>
++        <item name="colorOnSurfaceVariant">#CCFFFFFF</item>
++        <item name="colorOnBackground">@android:color/white</item>
++        <item name="globalFilledButtonBgColor">?attr/colorPrimary</item>
++        <item name="globalFilledButtonTextColor">?attr/colorOnPrimary</item>
++        <item name="globalFilledTonalButtonBgColor">?attr/colorPrimaryContainer</item>
++        <item name="globalFilledTonalButtonTextColor">?attr/colorOnPrimaryContainer</item>
++        <item name="globalTextButtonTextColor">?attr/colorPrimary</item>
++    </style>
+ </resources>
+diff --git a/chrome/browser/ui/android/night_mode/java/res/xml/theme_preferences.xml b/chrome/browser/ui/android/night_mode/java/res/xml/theme_preferences.xml
+--- a/chrome/browser/ui/android/night_mode/java/res/xml/theme_preferences.xml
++++ b/chrome/browser/ui/android/night_mode/java/res/xml/theme_preferences.xml
+@@ -8,4 +8,8 @@
+ <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+     <org.chromium.chrome.browser.night_mode.settings.RadioButtonGroupThemePreference
+         android:key="ui_theme_pref" />
++    <org.chromium.components.browser_ui.settings.ChromeSwitchPreference
++        android:key="pure_black"
++        android:title="@string/pure_black_title"
++        android:summary="@string/pure_black_summary" />
+ </PreferenceScreen>
+\ No newline at end of file
+diff --git a/chrome/browser/ui/android/night_mode/java/src/org/chromium/chrome/browser/night_mode/settings/ThemeSettingsFragment.java b/chrome/browser/ui/android/night_mode/java/src/org/chromium/chrome/browser/night_mode/settings/ThemeSettingsFragment.java
+--- a/chrome/browser/ui/android/night_mode/java/src/org/chromium/chrome/browser/night_mode/settings/ThemeSettingsFragment.java
++++ b/chrome/browser/ui/android/night_mode/java/src/org/chromium/chrome/browser/night_mode/settings/ThemeSettingsFragment.java
+@@ -6,6 +6,7 @@
+ 
+ import static org.chromium.chrome.browser.preferences.ChromePreferenceKeys.UI_THEME_SETTING;
+ 
++import android.app.Activity;
+ import android.content.Context;
+ import android.os.Bundle;
+ 
+@@ -23,9 +24,15 @@
+ import org.chromium.chrome.browser.night_mode.ThemeType;
+ import org.chromium.chrome.browser.night_mode.WebContentsDarkModeController;
+ import org.chromium.chrome.browser.night_mode.WebContentsDarkModeMessageController;
++import org.chromium.chrome.browser.preferences.ChromePreferenceKeys;
+ import org.chromium.chrome.browser.preferences.ChromeSharedPreferences;
+ import org.chromium.chrome.browser.settings.ChromeBaseSettingsFragment;
++import org.chromium.chrome.browser.lifetime.ApplicationLifetime;
++import org.chromium.chrome.browser.ui.messages.snackbar.Snackbar;
++import org.chromium.chrome.browser.ui.messages.snackbar.SnackbarManager;
++import org.chromium.chrome.browser.ui.messages.snackbar.SnackbarManager.SnackbarManageable;
+ import org.chromium.chrome.browser.settings.search.ChromeBaseSearchIndexProvider;
++import org.chromium.components.browser_ui.settings.ChromeSwitchPreference;
+ import org.chromium.components.browser_ui.settings.CustomDividerFragment;
+ import org.chromium.components.browser_ui.settings.SettingsUtils;
+ import org.chromium.components.browser_ui.settings.search.SettingsIndexData;
+@@ -45,6 +52,27 @@
+     private final SettableMonotonicObservableSupplier<String> mPageTitle =
+             ObservableSuppliers.createMonotonic();
+ 
++    private static final int RESTART_SNACKBAR_DURATION_MS = 10000;
++
++    private void showRestartSnackbar() {
++        Activity activity = getActivity();
++        if (!(activity instanceof SnackbarManageable)) return;
++        SnackbarManager manager = ((SnackbarManageable) activity).getSnackbarManager();
++        manager.showSnackbar(
++                Snackbar.make(
++                                getString(R.string.restart_to_apply),
++                                new SnackbarManager.SnackbarController() {
++                                    @Override
++                                    public void onAction(@Nullable Object actionData) {
++                                        ApplicationLifetime.terminate(true);
++                                    }
++                                },
++                                Snackbar.TYPE_ACTION,
++                                Snackbar.UMA_UNKNOWN)
++                        .setAction(getString(R.string.relaunch), null)
++                        .setDuration(RESTART_SNACKBAR_DURATION_MS));
++    }
++
+     @Override
+     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
+         SettingsUtils.addPreferencesFromResource(this, R.xml.theme_preferences);
+@@ -75,6 +103,21 @@
+                     return true;
+                 });
+ 
++        ChromeSwitchPreference pureBlack =
++                (ChromeSwitchPreference) findPreference("pure_black");
++        if (pureBlack != null) {
++            pureBlack.setChecked(
++                    sharedPreferencesManager.readBoolean(
++                            ChromePreferenceKeys.PURE_BLACK, true));
++            pureBlack.setOnPreferenceChangeListener(
++                    (preference, newValue) -> {
++                        sharedPreferencesManager.writeBoolean(
++                                ChromePreferenceKeys.PURE_BLACK, (boolean) newValue);
++                        showRestartSnackbar();
++                        return true;
++                    });
++        }
++
+         // TODO(crbug.com/40198953): Notify feature engagement system that settings were opened.
+         // Record entry point metrics if this fragment is freshly created.
+         if (savedInstanceState == null) {
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/ChromeBaseAppCompatActivity.java b/chrome/android/java/src/org/chromium/chrome/browser/ChromeBaseAppCompatActivity.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/ChromeBaseAppCompatActivity.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/ChromeBaseAppCompatActivity.java
+@@ -58,6 +58,8 @@
+ import org.chromium.chrome.browser.night_mode.GlobalNightModeStateProviderHolder;
+ import org.chromium.chrome.browser.night_mode.NightModeStateProvider;
+ import org.chromium.chrome.browser.night_mode.NightModeUtils;
++import org.chromium.chrome.browser.preferences.ChromePreferenceKeys;
++import org.chromium.chrome.browser.preferences.ChromeSharedPreferences;
+ import org.chromium.chrome.browser.ntp_customization.NtpCustomizationUtils;
+ import org.chromium.chrome.browser.ntp_customization.theme.NtpThemeStateProvider;
+ import org.chromium.chrome.browser.ui.edge_to_edge.EdgeToEdgeController;
+@@ -651,6 +653,12 @@
+             applySingleThemeOverlay(R.style.ThemeOverlay_BrowserUI_OptOutEdgeToEdge);
+         }
+ 
++        if (getNightModeStateProvider().isInNightMode()
++                && ChromeSharedPreferences.getInstance()
++                        .readBoolean(ChromePreferenceKeys.PURE_BLACK, true)) {
++            applySingleThemeOverlay(R.style.ThemeOverlay_BrowserUI_PureBlack);
++        }
++
+         if (StyleUtils.shouldApplyDesktopDensity() && DeviceInfo.isDesktopFalse()) {
+             applySingleThemeOverlay(R.style.ThemeOverlay_BrowserUI_DesktopDensity);
+             applySingleThemeOverlay(R.style.ThemeOverlay_BrowserUI_DesktopDensity_TabStrip);
+diff --git a/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java b/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
+--- a/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
++++ b/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
+@@ -423,6 +423,8 @@
+     public static final String FEED_PREVIOUS_WIDESCREEN_STATE =
+             "Chrome.Feed.PreviousWidescreenState";
+ 
++    public static final String PURE_BLACK = "Chrome.Theme.PureBlack";
++
+     public static final String FIRST_RUN_FLOW_COMPLETE = "first_run_flow";
+     // BACKUP_FLOW_SIGNIN_ACCOUNT_NAME used to be employed for the FRE too, thus the "first_run_"
+     // prefix. The string should NOT be changed without some sort of migration.
+@@ -1184,6 +1186,7 @@
+     @CheckDiscard("Validation is performed in tests and in debug builds.")
+     static List<String> getKeysInUse() {
+         return Arrays.asList(
++                PURE_BLACK,
+                 ADAPTIVE_TOOLBAR_CUSTOMIZATION_ENABLED,
+                 ADAPTIVE_TOOLBAR_CUSTOMIZATION_SETTINGS,
+                 ADDRESS_BAR_SETTINGS_CLICKED,
+diff --git a/chrome/browser/ui/android/strings/android_chrome_strings.grd b/chrome/browser/ui/android/strings/android_chrome_strings.grd
+--- a/chrome/browser/ui/android/strings/android_chrome_strings.grd
++++ b/chrome/browser/ui/android/strings/android_chrome_strings.grd
+@@ -1010,6 +1010,15 @@
+       </if>
+ 
+       <!-- Themes settings -->
++      <message name="IDS_RESTART_TO_APPLY" desc="Text of the bar shown after changing an appearance setting that only takes effect once the browser has been restarted.">
++        Restart to apply this change
++      </message>
++      <message name="IDS_PURE_BLACK_TITLE" desc="Title of the switch in Appearance - Theme that paints the browser pure black instead of dark grey.">
++        Pure black
++      </message>
++      <message name="IDS_PURE_BLACK_SUMMARY" desc="Summary under the Pure black switch explaining what it does and why.">
++        Use true black instead of dark grey in dark mode. Saves power on OLED screens, where black pixels are switched off.
++      </message>
+       <message name="IDS_THEME_SETTINGS" desc="Title for the Theme settings. [CHAR_LIMIT=32]">
+         Theme
+       </message>
+diff --git a/chrome/browser/ui/android/night_mode/BUILD.gn b/chrome/browser/ui/android/night_mode/BUILD.gn
+--- a/chrome/browser/ui/android/night_mode/BUILD.gn
++++ b/chrome/browser/ui/android/night_mode/BUILD.gn
+@@ -34,7 +34,9 @@
+     "//chrome/browser/flags:java",
+     "//chrome/browser/preferences:java",
+     "//chrome/browser/profiles/android:java",
++    "//chrome/browser/lifetime/android:java",
+     "//chrome/browser/settings:java",
++    "//chrome/browser/ui/messages/android:java",
+     "//components/browser_ui/settings/android:java",
+     "//components/browser_ui/site_settings/android:java",
+     "//components/browser_ui/strings/android:browser_ui_strings_grd",
