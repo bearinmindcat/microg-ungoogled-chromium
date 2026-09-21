@@ -12,3 +12,5 @@ opera-store-user-agent.patch
 crx-install-prompt-android.patch
 Add-relaunch-prompt-for-force-tablet-UI.patch
 fix-supervised-account-lock.patch
+external-download-manager.patch
+pure-black-theme.patch

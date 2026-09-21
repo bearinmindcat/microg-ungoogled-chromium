@@ -1,0 +1,215 @@
+subject: Add external download manager support
+
+Offer each download to another app (ADM, 1DM) instead of fetching it in the browser,
+behind a switch in Settings > Downloads. Nothing is offered while the switch is off.
+---
+diff --git a/chrome/browser/download/android/download_controller.cc b/chrome/browser/download/android/download_controller.cc
+--- a/chrome/browser/download/android/download_controller.cc
++++ b/chrome/browser/download/android/download_controller.cc
+@@ -369,6 +369,19 @@
+ }
+ 
+ void DownloadController::OnDownloadStarted(DownloadItem* download_item) {
++  {
++    JNIEnv* env = base::android::AttachCurrentThread();
++    if (Java_DownloadController_maybeOpenWithExternalApp(
++            env, url::GURLAndroid::FromNativeGURL(env, download_item->GetURL()),
++            download_item->GetMimeType(),
++            url::GURLAndroid::FromNativeGURL(
++                env, download_item->GetReferrerUrl()))) {
++      ScheduleRemoveDownloadItem(download_item);
++      download_item->RemoveObserver(this);
++      return;
++    }
++  }
++
+   // For dangerous downloads, we need to show the dangerous infobar before the
+   // download can start.
+   if (!download_item->IsDangerous() &&
+diff --git a/chrome/browser/ui/android/strings/android_chrome_strings.grd b/chrome/browser/ui/android/strings/android_chrome_strings.grd
+--- a/chrome/browser/ui/android/strings/android_chrome_strings.grd
++++ b/chrome/browser/ui/android/strings/android_chrome_strings.grd
+@@ -4503,6 +4503,12 @@
+       <message name="IDS_MENU_TASK_MANAGER" desc="Menu item to show the task manager. [CHAR_LIMIT=27]">
+         Task manager
+       </message>
++      <message name="IDS_EXTERNAL_DOWNLOAD_MANAGER_TITLE" desc="Title of the switch that sends downloads to a separate download manager app.">
++        Download with another app
++      </message>
++      <message name="IDS_EXTERNAL_DOWNLOAD_MANAGER_SUMMARY" desc="Summary under that switch. Warns that sign-in cookies are not passed to the other app.">
++        Offer each download to a download manager app instead of fetching it here. Sign-in cookies are not passed on, so downloads that need an account may fail in the other app.
++      </message>
+       <message name="IDS_MENU_DEV_TOOLS" desc="Menu item to show developer tools. [CHAR_LIMIT=27]">
+         Developer tools
+       </message>
+diff --git a/chrome/browser/download/android/java/res/xml/download_preferences.xml b/chrome/browser/download/android/java/res/xml/download_preferences.xml
+--- a/chrome/browser/download/android/java/res/xml/download_preferences.xml
++++ b/chrome/browser/download/android/java/res/xml/download_preferences.xml
+@@ -22,4 +22,9 @@
+         android:key="auto_open_pdf_enabled"
+         android:title="@string/auto_open_pdf_enabled_title"
+         android:summaryOff="@string/text_off"/>
++    <org.chromium.components.browser_ui.settings.ChromeSwitchPreference
++        android:key="external_download_manager"
++        android:title="@string/external_download_manager_title"
++        android:summary="@string/external_download_manager_summary" />
++
+ </PreferenceScreen>
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/download/DownloadController.java b/chrome/android/java/src/org/chromium/chrome/browser/download/DownloadController.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/download/DownloadController.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/download/DownloadController.java
+@@ -4,14 +4,24 @@
+ 
+ package org.chromium.chrome.browser.download;
+ 
++import android.content.ActivityNotFoundException;
++import android.content.Context;
++import android.content.Intent;
++import android.content.pm.ResolveInfo;
++import android.net.Uri;
++import android.text.TextUtils;
++
+ import org.jni_zero.CalledByNative;
+ import org.jni_zero.JniType;
+ import org.jni_zero.NativeMethods;
+ 
++import org.chromium.base.ContextUtils;
+ import org.chromium.build.annotations.NullMarked;
+ import org.chromium.build.annotations.Nullable;
+ import org.chromium.chrome.browser.pdf.PdfPage;
+ import org.chromium.chrome.browser.pdf.PdfUtils;
++import org.chromium.chrome.browser.preferences.ChromePreferenceKeys;
++import org.chromium.chrome.browser.preferences.ChromeSharedPreferences;
+ import org.chromium.chrome.browser.profiles.Profile;
+ import org.chromium.chrome.browser.tab.EmptyTabObserver;
+ import org.chromium.chrome.browser.tab.Tab;
+@@ -100,6 +110,43 @@
+      *
+      * @param info Download information about the download.
+      */
++    @CalledByNative
++    private static boolean maybeOpenWithExternalApp(
++            GURL url, @JniType("std::string") String mimeType, GURL referrer) {
++        if (!ChromeSharedPreferences.getInstance()
++                .readBoolean(ChromePreferenceKeys.DOWNLOAD_EXTERNAL_DOWNLOAD_MANAGER, false)) {
++            return false;
++        }
++        if (url == null || !url.isValid()) return false;
++
++        String scheme = url.getScheme();
++        if (!"http".equals(scheme) && !"https".equals(scheme)) return false;
++
++        Context context = ContextUtils.getApplicationContext();
++        Intent intent = new Intent(Intent.ACTION_VIEW);
++        intent.setDataAndType(
++                Uri.parse(url.getSpec()),
++                TextUtils.isEmpty(mimeType) ? "application/octet-stream" : mimeType);
++        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++        if (referrer != null && referrer.isValid()) {
++            intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse(referrer.getSpec()));
++        }
++
++        ResolveInfo resolved = context.getPackageManager().resolveActivity(intent, 0);
++        if (resolved == null
++                || resolved.activityInfo == null
++                || context.getPackageName().equals(resolved.activityInfo.packageName)) {
++            return false;
++        }
++
++        try {
++            context.startActivity(intent);
++            return true;
++        } catch (ActivityNotFoundException | SecurityException e) {
++            return false;
++        }
++    }
++
+     static void enqueueDownloadManagerRequest(final DownloadInfo info) {
+         DownloadManagerService.getDownloadManagerService()
+                 .enqueueNewDownload(new DownloadItem(true, info), true);
+diff --git a/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java b/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
+--- a/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
++++ b/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
+@@ -386,6 +386,8 @@
+             "Chrome.Extensions.StoreDesktopSiteSeeded3";
+ 
+     public static final String DOWNLOAD_AUTO_RESUMPTION_ATTEMPT_LEFT = "ResumptionAttemptLeft";
++    public static final String DOWNLOAD_EXTERNAL_DOWNLOAD_MANAGER =
++            "Chrome.Downloads.ExternalDownloadManager";
+     public static final String DOWNLOAD_FOREGROUND_SERVICE_OBSERVERS = "ForegroundServiceObservers";
+     public static final String DOWNLOAD_IS_DOWNLOAD_HOME_ENABLED =
+             "org.chromium.chrome.browser.download.IS_DOWNLOAD_HOME_ENABLED";
+@@ -1256,6 +1258,7 @@
+                 DEPRECATED_HOMEPAGE_LOCATION_POLICY,
+                 DEPRECATED_HOMEPAGE_PARTNER_CUSTOMIZED_DEFAULT_URI,
+                 DEVICE_LOCK_SHOW_ALERT_IF_REMOVED,
++                DOWNLOAD_EXTERNAL_DOWNLOAD_MANAGER,
+                 DOWNLOAD_INTERSTITIAL_DOWNLOAD_PENDING_REMOVAL,
+                 DSE_NEW_TAB_URL,
+                 HOME_MODULES_IMPRESSION_COUNT_BEFORE_INTERACTION.pattern(),
+diff --git a/chrome/browser/download/android/java/src/org/chromium/chrome/browser/download/settings/DownloadSettings.java b/chrome/browser/download/android/java/src/org/chromium/chrome/browser/download/settings/DownloadSettings.java
+--- a/chrome/browser/download/android/java/src/org/chromium/chrome/browser/download/settings/DownloadSettings.java
++++ b/chrome/browser/download/android/java/src/org/chromium/chrome/browser/download/settings/DownloadSettings.java
+@@ -20,6 +20,8 @@
+ import org.chromium.chrome.browser.download.MimeUtils;
+ import org.chromium.chrome.browser.download.R;
+ import org.chromium.chrome.browser.pdf.PdfUtils;
++import org.chromium.chrome.browser.preferences.ChromePreferenceKeys;
++import org.chromium.chrome.browser.preferences.ChromeSharedPreferences;
+ import org.chromium.chrome.browser.preferences.Pref;
+ import org.chromium.chrome.browser.profiles.Profile;
+ import org.chromium.chrome.browser.settings.ChromeBaseSettingsFragment;
+@@ -38,11 +40,13 @@
+     public static final String PREF_LOCATION_CHANGE = "location_change";
+     public static final String PREF_LOCATION_PROMPT_ENABLED = "location_prompt_enabled";
+     public static final String PREF_AUTO_OPEN_PDF_ENABLED = "auto_open_pdf_enabled";
++    public static final String PREF_EXTERNAL_DOWNLOAD_MANAGER = "external_download_manager";
+ 
+     private DownloadLocationPreference mLocationChangePref;
+     private ChromeSwitchPreference mLocationPromptEnabledPref;
+     private ManagedPreferenceDelegate mLocationPromptEnabledPrefDelegate;
+     private ChromeSwitchPreference mAutoOpenPdfEnabledPref;
++    private @Nullable ChromeSwitchPreference mExternalDownloadManagerPref;
+     private final SettableMonotonicObservableSupplier<String> mPageTitle =
+             ObservableSuppliers.createMonotonic();
+ 
+@@ -70,6 +74,12 @@
+         mLocationChangePref = (DownloadLocationPreference) findPreference(PREF_LOCATION_CHANGE);
+         mLocationChangePref.setDownloadLocationHelper(new DownloadLocationHelperImpl(getProfile()));
+ 
++        mExternalDownloadManagerPref =
++                (ChromeSwitchPreference) findPreference(PREF_EXTERNAL_DOWNLOAD_MANAGER);
++        if (mExternalDownloadManagerPref != null) {
++            mExternalDownloadManagerPref.setOnPreferenceChangeListener(this);
++        }
++
+         mAutoOpenPdfEnabledPref =
+                 (ChromeSwitchPreference) findPreference(PREF_AUTO_OPEN_PDF_ENABLED);
+         if (shouldEnableAutoOpenPdf(getProfile())) {
+@@ -123,6 +133,14 @@
+     private void updateDownloadSettings() {
+         mLocationChangePref.updateSummary();
+ 
++        if (mExternalDownloadManagerPref != null) {
++            mExternalDownloadManagerPref.setChecked(
++                    ChromeSharedPreferences.getInstance()
++                            .readBoolean(
++                                    ChromePreferenceKeys.DOWNLOAD_EXTERNAL_DOWNLOAD_MANAGER,
++                                    false));
++        }
++
+         if (DownloadDialogBridge.isLocationDialogManaged(getProfile())) {
+             // Location prompt can be controlled by the enterprise policy.
+             mLocationPromptEnabledPref.setChecked(
+@@ -157,6 +175,11 @@
+                 DownloadDialogBridge.setPromptForDownloadAndroid(
+                         getProfile(), DownloadPromptStatus.DONT_SHOW);
+             }
++        } else if (PREF_EXTERNAL_DOWNLOAD_MANAGER.equals(preference.getKey())) {
++            ChromeSharedPreferences.getInstance()
++                    .writeBoolean(
++                            ChromePreferenceKeys.DOWNLOAD_EXTERNAL_DOWNLOAD_MANAGER,
++                            (boolean) newValue);
+         } else if (PREF_AUTO_OPEN_PDF_ENABLED.equals(preference.getKey())) {
+             UserPrefs.get(getProfile()).setBoolean(Pref.AUTO_OPEN_PDF_ENABLED, (boolean) newValue);
+         }
