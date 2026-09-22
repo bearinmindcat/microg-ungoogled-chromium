@@ -6,14 +6,18 @@ without this sign-in does not survive a restart.
 diff --git a/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java b/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
 --- a/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
 +++ b/chrome/browser/signin/services/android/java/src/org/chromium/chrome/browser/signin/services/SigninManagerImpl.java
-@@ -171,6 +171,12 @@
+@@ -171,6 +171,16 @@
              seedThenReloadAllAccountsFromSystem(accounts, primaryAccountInfo.getId());
              return;
          }
-+        if (AccountUtils.findAccountByEmail(accounts, primaryAccountInfo.getEmail()) != null) {
++        AccountInfo matchedByEmail =
++                AccountUtils.findAccountByEmail(accounts, primaryAccountInfo.getEmail());
++        if (matchedByEmail != null) {
 +            Log.i(TAG, "Primary account Gaia ID mismatch, but email found - keeping signed in (microG workaround)");
++            List<AccountInfo> reconciled = new ArrayList<>(accounts);
++            reconciled.set(reconciled.indexOf(matchedByEmail), primaryAccountInfo);
 +            seedThenReloadAllAccountsFromSystem(
-+                    accounts, CoreAccountInfo.getIdFrom(primaryAccountInfo));
++                    reconciled, CoreAccountInfo.getIdFrom(primaryAccountInfo));
 +            return;
 +        }
          if (isOperationInProgress()) {

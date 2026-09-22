@@ -34,10 +34,9 @@ index 779a09fee674c..0d822e61c3c3c 100644
      }
 diff --git a/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java b/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java
 new file mode 100644
-index 0000000000000..415ea116c6405
 --- /dev/null
 +++ b/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java
-@@ -0,0 +1,600 @@
+@@ -0,0 +1,624 @@
 +// Copyright 2025 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -109,6 +108,28 @@ index 0000000000000..415ea116c6405
 +    private static final long CONTENT_PROVIDER_RETRY_DELAY_MS = 100;
 +
 +    private static final ConcurrentHashMap<String, String> sRealGaiaIdCache = new ConcurrentHashMap<>();
++    private static final String GAIA_ID_PREFS = "microg_gaia_ids";
++
++    private static @Nullable String persistedGaiaId(String email) {
++        return ContextUtils.getApplicationContext()
++                .getSharedPreferences(GAIA_ID_PREFS, Context.MODE_PRIVATE)
++                .getString(email, null);
++    }
++
++    private static String rememberGaiaId(String email, String gaiaId) {
++        String existing = persistedGaiaId(email);
++        if (existing != null) {
++            sRealGaiaIdCache.put(email, existing);
++            return existing;
++        }
++        sRealGaiaIdCache.put(email, gaiaId);
++        ContextUtils.getApplicationContext()
++                .getSharedPreferences(GAIA_ID_PREFS, Context.MODE_PRIVATE)
++                .edit()
++                .putString(email, gaiaId)
++                .apply();
++        return gaiaId;
++    }
 +
 +    private static final String LTAG = "MicroGAcctDeleg";
 +
@@ -327,7 +348,7 @@ index 0000000000000..415ea116c6405
 +                String json = response.toString();
 +                String realGaiaId = extractSubFromJson(json);
 +                if (realGaiaId != null && !realGaiaId.isEmpty()) {
-+                    sRealGaiaIdCache.put(email, realGaiaId);
++                    rememberGaiaId(email, realGaiaId);
 +                }
 +            }
 +            conn.disconnect();
@@ -429,6 +450,10 @@ index 0000000000000..415ea116c6405
 +    @Override
 +    public @Nullable GaiaId getAccountGaiaId(String accountEmail) {
 +        String cachedRealId = sRealGaiaIdCache.get(accountEmail);
++        if (cachedRealId == null) {
++            cachedRealId = persistedGaiaId(accountEmail);
++            if (cachedRealId != null) sRealGaiaIdCache.put(accountEmail, cachedRealId);
++        }
 +        if (cachedRealId != null) {
 +            return new GaiaId(cachedRealId);
 +        }
@@ -436,12 +461,10 @@ index 0000000000000..415ea116c6405
 +        if (REVANCED_ACCOUNT_TYPE.equals(mAccountType)) {
 +            String realGaiaId = fetchRealGaiaIdSync(accountEmail);
 +            if (realGaiaId != null && !realGaiaId.isEmpty()) {
-+                sRealGaiaIdCache.put(accountEmail, realGaiaId);
-+                return new GaiaId(realGaiaId);
++                return new GaiaId(rememberGaiaId(accountEmail, realGaiaId));
 +            }
 +
-+            String fakeGaiaId = generateFakeGaiaId(accountEmail);
-+            return new GaiaId(fakeGaiaId);
++            return new GaiaId(rememberGaiaId(accountEmail, generateFakeGaiaId(accountEmail)));
 +        }
 +
 +        try {

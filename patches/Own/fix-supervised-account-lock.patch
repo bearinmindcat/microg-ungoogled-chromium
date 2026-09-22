@@ -6,7 +6,7 @@ in error, locking developer mode and extension installs.
 diff --git a/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java b/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java
 --- a/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java
 +++ b/components/signin/public/android/java/src/org/chromium/components/signin/MicroGAccountManagerDelegate.java
-@@ -332,6 +332,9 @@
+@@ -354,6 +354,9 @@
      @Override
      public int hasCapability(@Nullable Account account, String capability) {
          if (account != null && capability != null) {
@@ -16,7 +16,7 @@ diff --git a/components/signin/public/android/java/src/org/chromium/components/s
              try {
                  boolean hasFeature = mAccountManager
                          .hasFeatures(toDelegateAccount(account), new String[] {capability},
-@@ -345,6 +348,11 @@
+@@ -367,6 +370,11 @@
          return AccountManagerDelegate.CapabilityResponse.EXCEPTION;
      }
  

@@ -1,6 +1,7 @@
 # 152.0.7977.82-3
 * microG: downloads can be handed to another app. Settings > Downloads gains "Download with another app" (off by default); each download is offered to an installed download manager over ACTION_VIEW and only dropped here if one takes it. http/https only, and sign-in cookies are not passed on
 * microG: a pure black theme for OLED panels. Settings > Appearance > Theme gains "Pure black" (on by default, dark mode only), painting browser surfaces true black instead of Material dark grey
+* microG: fixed a crash at launch ("Primary account should exist in the list of accounts when seeding"). The account delegate now persists each account's Gaia ID so it stays stable across launches, and the sign-in fallback keeps the stored primary account instead of re-keying it
 
 # 152.0.7977.82-2
 * microG: developer mode and extension installs are no longer locked by a supervised-account flag. microG cannot answer the parental-controls account capability, so it is reported unknown instead of trusting hasFeatures; a stale child flag is cleared when no account is signed in; the ExtensionDeveloperModeSettings policy handler is not registered
