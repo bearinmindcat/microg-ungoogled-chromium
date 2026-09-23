@@ -1,30 +1,15 @@
-# 152.0.7977.82-3
-* microG: downloads can be handed to another app. Settings > Downloads gains "Download with another app" (off by default); each download is offered to an installed download manager over ACTION_VIEW and only dropped here if one takes it. http/https only, and sign-in cookies are not passed on
-* microG: a pure black theme for OLED panels. Settings > Appearance > Theme gains "Pure black" (on by default, dark mode only), painting browser surfaces true black instead of Material dark grey
-* microG: fixed a crash at launch ("Primary account should exist in the list of accounts when seeding"). The account delegate now persists each account's Gaia ID so it stays stable across launches, and the sign-in fallback keeps the stored primary account instead of re-keying it
-
 # 152.0.7977.82-2
-* microG: developer mode and extension installs are no longer locked by a supervised-account flag. microG cannot answer the parental-controls account capability, so it is reported unknown instead of trusting hasFeatures; a stale child flag is cleared when no account is signed in; the ExtensionDeveloperModeSettings policy handler is not registered
+* Fixed misc issues with developer mode
+* Added pure black theme for amoled devices
+* Fixed misc microg account crash
+* Added download manager (to downloads)
 
 # 152.0.7977.82-1
 * Upstream update (v150.0.7871.114-1 to v152.0.7977.82)
-* Refreshed the full patch series against 152; all patches apply with no fuzz or offset
-* Re-anchored patches where upstream relocated code (safe_browsing dep moved to source_set("core"), proxy_api_helpers.cc and EnterpriseInfoImpl.java moved packages)
-* Adapted patches for 152 API changes: CreatePrefProxyConfigTrackerOfProfile gained a PolicyService argument, buildModelForStandardMenuItem moved to AppMenuItemUtils
-* Dropped hunks made obsolete by upstream deletions in fix-degoogle-core-werror-batch2-150
-* Added src-fix/fix-safebrowsing-suspicious-site-dialog-152 for the new chrome/browser/ui/android/safe_browsing code that calls the removed suspicious site controller
-* microG: ported the extensions layer (android-extensions-support, enable-extension-in-incognito, add-quick-extension-toggle-menu, load-crx, webstore-desktop-site, opera-addons-icon) to 152; every patch in every series now applies with strict `git apply` (no fuzz)
-* microG: Fix-native-account-consistency reduced to its two functional hunks (dropped the debug logging, which also wrote OAuth token prefixes to logcat)
-* microG: GMS-removal patches stay disabled (required for microG sign-in)
-
-# 150.0.7871.114-4
-* Fix the extensions Web Store link and extension updates/sync. The microG domain-substitution exclusion (`_mg_desub` in `build.sh`) was anchored `^(` and so never matched the `./`-prefixed entries in the second substitution list, leaving the Android Web Store URL (`UrlConstants.CHROME_WEBSTORE_URL`) and the update-manifest XML namespace (`safe_manifest_parser.cc`) rewritten to an unreachable `*.qjz9zk` host. The exclusion now also covers `extensions/browser/updater/`, `chrome/browser/extensions/updater/` and the Android `UrlConstants`, and the build asserts both strings survive. This also unblocks applying synced extensions (the update fetch can parse Google's response again).
-* chrome://extensions now renders with a desktop layout on Android (drops the injected mobile `viewport` meta), so the page no longer clips.
-* Add "Chrome Web Store" and "Opera add-ons" links to the extensions sidebar.
-
-# 150.0.7871.114-3
-* Extensions: add a "load .crx" button to the developer-mode drawer (ported from Ultimatum).
-* Extensions: de-substitute the Web Store URL and category link so they resolve instead of pointing at an invalid host.
+* Added extensions
+* Fixed misc microg-gms sync errors
+* Added web store links & domain substitutions
+* Added "load .crx" button
 
 # 150.0.7871.114-1
 * Upstream update (v99.0.4844.51-1 to v150.0.7871.114)
