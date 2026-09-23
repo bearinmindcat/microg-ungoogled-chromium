@@ -14,3 +14,4 @@ Add-relaunch-prompt-for-force-tablet-UI.patch
 fix-supervised-account-lock.patch
 external-download-manager.patch
 pure-black-theme.patch
+fix-extension-remove-crash.patch

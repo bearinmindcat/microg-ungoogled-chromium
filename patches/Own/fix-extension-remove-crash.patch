@@ -1,0 +1,68 @@
+subject: Fix crash when removing an extension
+
+The extensions menu stayed subscribed to the shared menu bridge after it closed, so
+removing an extension made it delete a row from its already-cleared list.
+---
+diff --git a/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsMenuBridge.java b/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsMenuBridge.java
+--- a/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsMenuBridge.java
++++ b/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsMenuBridge.java
+@@ -72,6 +72,16 @@
+         Instance().mObserver = observer;
+     }
+ 
++    public void removeObserver(ChromeAndroidTask task, Observer observer) {
++        ExtensionsMenuBridge instance = Instance();
++        if (instance.mObservers.get(task) == observer) {
++            instance.mObservers.remove(task);
++        }
++        if (instance.mObserver == observer) {
++            instance.mObserver = null;
++        }
++    }
++
+     @Override
+     public void onAddedToTask(ChromeAndroidTaskFeature.InitInfo initInfo) {
+         assert mTask != null;
+diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java
+--- a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java
++++ b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java
+@@ -186,6 +186,7 @@
+     /** Destroys the mediator. */
+     @Override
+     public void destroy() {
++        mMenuBridge.removeObserver(mTask, this);
+         mMainPageModel.set(ExtensionsMenuProperties.SITE_SETTINGS_TOGGLE_CLICK_LISTENER, null);
+         mSitePermissionsPageModel.set(SitePermissionsPageProperties.BACK_CLICK_LISTENER, null);
+     }
+@@ -224,6 +225,11 @@
+             return;
+         }
+ 
++        if (actionIndex < 0 || actionIndex > mActionModels.size()) {
++            updateMenuEntries();
++            return;
++        }
++
+         ExtensionsMenuTypes.MenuEntryState entry = mMenuBridge.getMenuEntry(actionIndex);
+         mActionModels.add(actionIndex, createMenuItem(entry));
+ 
+@@ -234,6 +240,7 @@
+     public void onActionIconUpdated(int actionIndex) {
+         if (getCurrentPage() == ExtensionsMenuProperties.Page.MAIN) {
+             // Update the icon for the extension entry in the main page.
++            if (actionIndex < 0 || actionIndex >= mActionModels.size()) return;
+             PropertyModel model = mActionModels.get(actionIndex).model;
+             if (model == null) {
+                 return;
+@@ -260,7 +267,10 @@
+     public void onActionRemoved(int actionIndex) {
+         if (getCurrentPage() == ExtensionsMenuProperties.Page.MAIN) {
+             // Remove the menu entry for the extension when main page is opened.
+-            assert actionIndex >= 0 && actionIndex < mActionModels.size();
++            if (actionIndex < 0 || actionIndex >= mActionModels.size()) {
++                updateMenuEntries();
++                return;
++            }
+             mActionModels.removeAt(actionIndex);
+ 
+             updateZeroState();
