@@ -1,0 +1,223 @@
+subject: Enable Android DevTools on phones
+
+Turn on the on-device DevTools, with a flag to turn it off, and drop the tablet-only
+checks. Developer tools and Task manager go in a More tools submenu on phones, and
+tapping More tools again closes its flyout. DevTools only loads its built-in frontend.
+Based on Cromite, Aerium, Titanium and Ultimatum.
+---
+diff --git a/content/public/common/content_features.cc b/content/public/common/content_features.cc
+--- a/content/public/common/content_features.cc
++++ b/content/public/common/content_features.cc
+@@ -37,7 +37,7 @@
+ BASE_FEATURE(kAndroidCaptureKeyEvents, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+ // DevTools frontend for Android.
+-BASE_FEATURE(kAndroidDevToolsFrontend, base::FEATURE_DISABLED_BY_DEFAULT);
++BASE_FEATURE(kAndroidDevToolsFrontend, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+ // Enables media to continue playing in the background.
+ BASE_FEATURE(kAndroidEnableBackgroundMediaLargeFormFactors,
+diff --git a/chrome/browser/ungoogled_flag_entries.h b/chrome/browser/ungoogled_flag_entries.h
+--- a/chrome/browser/ungoogled_flag_entries.h
++++ b/chrome/browser/ungoogled_flag_entries.h
+@@ -152,4 +152,8 @@
+      "Enable save-data header",
+      "Enable save-data header without enabling Data Saver. ungoogled-chromium flag",
+      kOsAndroid, FEATURE_VALUE_TYPE(network::features::kEnableSaveDataHeader)},
++    {"enable-android-devtools",
++     "Developer tools",
++     "Show Developer tools in the app menu and Inspect in the long-press menu, opening DevTools on the device. ungoogled-chromium-android flag.",
++     kOsAndroid, FEATURE_VALUE_TYPE(features::kAndroidDevToolsFrontend)},
+ #endif  // CHROME_BROWSER_UNGOOGLED_FLAG_ENTRIES_H_
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/MoreToolsItemBuilder.java b/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/MoreToolsItemBuilder.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/MoreToolsItemBuilder.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/MoreToolsItemBuilder.java
+@@ -26,7 +26,6 @@
+ import org.chromium.content_public.browser.ContentFeatureList;
+ import org.chromium.content_public.browser.ContentFeatureMap;
+ import org.chromium.content_public.browser.WebContents;
+-import org.chromium.ui.base.DeviceFormFactor;
+ import org.chromium.ui.modelutil.MVCListAdapter.ListItem;
+ import org.chromium.ui.modelutil.PropertyModel;
+ import org.chromium.url.GURL;
+@@ -241,7 +240,6 @@
+      */
+     public boolean shouldShowDevToolsItem(@Nullable Tab currentTab) {
+         if (!ContentFeatureMap.isEnabled(ContentFeatureList.ANDROID_DEV_TOOLS_FRONTEND)
+-                || !DeviceFormFactor.isNonMultiDisplayContextOnTablet(mContext)
+                 || currentTab == null
+                 || currentTab.isNativePage()) {
+             return false;
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java b/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
+@@ -549,6 +549,11 @@
+             modelList.add(buildListenToFeedItem());
+         }
+ 
++        if (TaskManager.isEnabled()
++                || mMoreToolsItemBuilder.shouldShowDevToolsItem(currentTab)) {
++            modelList.add(buildPhoneMoreToolsItem(currentTab));
++        }
++
+         // Divider Line
+         AppMenuItemUtils.maybeAddDividerLine(modelList, R.id.divider_line_id);
+ 
+@@ -1337,6 +1342,33 @@
+                     return submenuItems;
+                 };
+ 
++        return new ListItem(
++                AppMenuHandler.AppMenuItemType.MENU_ITEM_WITH_SUBMENU,
++                AppMenuItemUtils.buildModelForMenuItemWithSubmenu(
++                        mContext,
++                        getAppMenuItemTheme(),
++                        R.id.more_tools_menu_id,
++                        R.string.menu_more_tools,
++                        shouldShowIconBeforeItem()
++                                ? R.drawable.ic_more_tools_24dp
++                                : Resources.ID_NULL,
++                        submenuItemsSupplier,
++                        isMenuIconAtStart()));
++    }
++
++    private ListItem buildPhoneMoreToolsItem(@Nullable Tab currentTab) {
++        Supplier<List<ListItem>> submenuItemsSupplier =
++                () -> {
++                    List<ListItem> submenuItems = new ArrayList<>();
++                    if (mMoreToolsItemBuilder.shouldShowDevToolsItem(currentTab)) {
++                        submenuItems.add(mMoreToolsItemBuilder.buildDevToolsItem());
++                    }
++                    if (TaskManager.isEnabled()) {
++                        submenuItems.add(mMoreToolsItemBuilder.buildTaskManagerItem());
++                    }
++                    return submenuItems;
++                };
++
+         return new ListItem(
+                 AppMenuHandler.AppMenuItemType.MENU_ITEM_WITH_SUBMENU,
+                 AppMenuItemUtils.buildModelForMenuItemWithSubmenu(
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/contextmenu/ChromeContextMenuPopulator.java b/chrome/android/java/src/org/chromium/chrome/browser/contextmenu/ChromeContextMenuPopulator.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/contextmenu/ChromeContextMenuPopulator.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/contextmenu/ChromeContextMenuPopulator.java
+@@ -471,12 +471,10 @@
+     @VisibleForTesting
+     boolean shouldShowEmptySpaceContextMenu() {
+         // Enable empty space context menu from mouse-right click on all device form factors.
+-        // Limit long press (touch) as trigger only when desktop agent is used, because
+-        //   * some phones always identify as having a touchpad (crbug.com/429262357), and
+-        //   * known web compatibility issue on tablet devices (crbug.com/45188879).
+         return (mParams.getSourceType() == MenuSourceType.MOUSE
+-                || (TabUtils.isUsingDesktopUserAgent(mItemDelegate.getWebContents())
+-                        && mParams.getSourceType() == MenuSourceType.LONG_PRESS));
++                || (mParams.getSourceType() == MenuSourceType.LONG_PRESS
++                        && (TabUtils.isUsingDesktopUserAgent(mItemDelegate.getWebContents())
++                                || shouldShowDeveloperMenu())));
+     }
+ 
+     @VisibleForTesting
+@@ -495,8 +493,7 @@
+     @VisibleForTesting
+     boolean shouldShowDeveloperMenu() {
+         return DevToolsWindowAndroid.isDevToolsAllowedFor(
+-                        getProfile(), mItemDelegate.getWebContents())
+-                && isTabletScreen();
++                getProfile(), mItemDelegate.getWebContents());
+     }
+ 
+     @VisibleForTesting
+diff --git a/ui/android/java/src/org/chromium/ui/hierarchicalmenu/HierarchicalMenuController.java b/ui/android/java/src/org/chromium/ui/hierarchicalmenu/HierarchicalMenuController.java
+--- a/ui/android/java/src/org/chromium/ui/hierarchicalmenu/HierarchicalMenuController.java
++++ b/ui/android/java/src/org/chromium/ui/hierarchicalmenu/HierarchicalMenuController.java
+@@ -35,7 +35,6 @@
+ import org.chromium.build.annotations.NullMarked;
+ import org.chromium.build.annotations.Nullable;
+ import org.chromium.ui.R;
+-import org.chromium.ui.base.DeviceInput;
+ import org.chromium.ui.display.DisplayAndroidManager;
+ import org.chromium.ui.hierarchicalmenu.FlyoutController.FlyoutHandler;
+ import org.chromium.ui.modelutil.ListObservable;
+@@ -117,6 +116,7 @@
+     private @Nullable FlyoutController<T> mFlyoutController;
+     private List<ListItem> mLastHighlightedPath = new ArrayList<>();
+     private final ArrayList<Runnable> mBackRunnableStack = new ArrayList<>();
++    private @Nullable ListItem mClickOpenedFlyoutItem;
+     private final SettableNonNullObservableSupplier<Boolean> mBackPressChangedSupplier =
+             ObservableSuppliers.createNonNull(false);
+ 
+@@ -301,10 +301,6 @@
+             return true;
+         }
+ 
+-        if (!DeviceInput.supportsPrecisionPointer()) {
+-            return true;
+-        }
+-
+         DisplayMetrics displayMetrics = new DisplayMetrics();
+         DisplayAndroidManager.getDefaultDisplayForContext(mContext).getMetrics(displayMetrics);
+ 
+@@ -689,6 +685,14 @@
+                                     levelOfHoveredItem,
+                                     highlightPath);
+                         } else if (mFlyoutController != null) {
++                            if (item == mClickOpenedFlyoutItem
++                                    && mFlyoutController.isFlyoutOpenForItem(item)) {
++                                mClickOpenedFlyoutItem = null;
++                                mFlyoutController.exitFlyoutWithoutDelay(
++                                        levelOfHoveredItem + 1, view, highlightPath);
++                                return;
++                            }
++                            mClickOpenedFlyoutItem = item;
+                             // Allow for controlling flyout with keyboard for accessibility.
+                             mFlyoutController.enterFlyoutWithoutDelay(
+                                     item, view, levelOfHoveredItem, highlightPath, dismissDialog);
+diff --git a/ui/android/java/src/org/chromium/ui/hierarchicalmenu/FlyoutController.java b/ui/android/java/src/org/chromium/ui/hierarchicalmenu/FlyoutController.java
+--- a/ui/android/java/src/org/chromium/ui/hierarchicalmenu/FlyoutController.java
++++ b/ui/android/java/src/org/chromium/ui/hierarchicalmenu/FlyoutController.java
+@@ -159,6 +159,13 @@
+         return mPopups.size();
+     }
+ 
++    public boolean isFlyoutOpenForItem(ListItem item) {
++        for (FlyoutPopupEntry<T> entry : mPopups) {
++            if (entry.parentItem == item) return true;
++        }
++        return false;
++    }
++
+     /**
+      * Trigger flyout immediately without the delay, e.g. when keyboard is used to navigate flyout
+      * menus.
+diff --git a/chrome/browser/ui/webui/devtools/devtools_ui_data_source.cc b/chrome/browser/ui/webui/devtools/devtools_ui_data_source.cc
+--- a/chrome/browser/ui/webui/devtools/devtools_ui_data_source.cc
++++ b/chrome/browser/ui/webui/devtools/devtools_ui_data_source.cc
+@@ -181,7 +181,7 @@
+   // Serve request to devtools://remote from remote location.
+   std::string remote_path_prefix(chrome::kChromeUIDevToolsRemotePath);
+   remote_path_prefix += "/";
+-  if (base::StartsWith(path, remote_path_prefix,
++  if ((false) && base::StartsWith(path, remote_path_prefix,
+                        base::CompareCase::INSENSITIVE_ASCII)) {
+     if (MaybeHandleCustomRequest(path.substr(remote_path_prefix.length()),
+                                  &callback)) {
+@@ -204,7 +204,7 @@
+   // Serve request to devtools://custom from custom URL.
+   std::string custom_path_prefix(chrome::kChromeUIDevToolsCustomPath);
+   custom_path_prefix += "/";
+-  if (base::StartsWith(path, custom_path_prefix,
++  if ((false) && base::StartsWith(path, custom_path_prefix,
+                        base::CompareCase::INSENSITIVE_ASCII)) {
+     GURL custom_devtools_frontend = GetCustomDevToolsFrontendURL();
+     if (!custom_devtools_frontend.is_empty()) {
+diff --git a/third_party/devtools-frontend/src/BUILD.gn b/third_party/devtools-frontend/src/BUILD.gn
+--- a/third_party/devtools-frontend/src/BUILD.gn
++++ b/third_party/devtools-frontend/src/BUILD.gn
+@@ -169,7 +169,7 @@
+ 
+   inputs = []
+ 
+-  if (is_debug) {
++  if (is_debug || !is_android) {
+     deps = [ ":devtools_frontend_resources" ]
+     foreach(_grd_file, _expected_grd_files) {
+       inputs += [ "$target_gen_dir/$_grd_file" ]

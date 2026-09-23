@@ -1,0 +1,317 @@
+subject: Add an option to open DevTools in a new tab
+
+A "New tab" checkbox in More tools opens Developer tools and Inspect as a tab next to
+the inspected page instead of a separate window, like Kiwi Browser. Toggling it keeps
+the menu open, and checkbox rows without an icon line up with the other menu rows.
+---
+diff --git a/chrome/browser/devtools/devtools_window.cc b/chrome/browser/devtools/devtools_window.cc
+--- a/chrome/browser/devtools/devtools_window.cc
++++ b/chrome/browser/devtools/devtools_window.cc
+@@ -61,6 +61,7 @@
+ #include "components/javascript_dialogs/app_modal_dialog_manager.h"
+ #include "components/language/core/browser/pref_names.h"
+ #include "components/pref_registry/pref_registry_syncable.h"
++#include "components/prefs/pref_service.h"
+ #include "components/prefs/scoped_user_pref_update.h"
+ #include "components/search_engines/util.h"
+ #include "components/sessions/content/session_tab_helper.h"
+@@ -560,6 +561,12 @@
+   }
+ }
+ 
++#if BUILDFLAG(IS_ANDROID)
++namespace {
++const char kDevToolsOpenInNewTabPref[] = "devtools.android_open_in_new_tab";
++}  // namespace
++#endif
++
+ // static
+ void DevToolsWindow::RegisterProfilePrefs(
+     user_prefs::PrefRegistrySyncable* registry) {
+@@ -567,6 +574,9 @@
+   registry->RegisterDictionaryPref(prefs::kDevToolsFileSystemPaths);
+   registry->RegisterStringPref(prefs::kDevToolsAdbKey, std::string());
+   registry->RegisterInt64Pref(prefs::kDevToolsLastOpenTimestamp, 0L);
++#if BUILDFLAG(IS_ANDROID)
++  registry->RegisterBooleanPref(kDevToolsOpenInNewTabPref, false);
++#endif
+ 
+   registry->RegisterBooleanPref(prefs::kDevToolsDiscoverUsbDevicesEnabled,
+                                 true);
+@@ -1035,6 +1045,44 @@
+   }
+ 
+ #if BUILDFLAG(IS_ANDROID)
++  if (!launched_activity_ &&
++      profile_->GetOriginalProfile()->GetPrefs()->GetBoolean(
++          kDevToolsOpenInNewTabPref)) {
++    if (!owned_main_web_contents_) {
++      tabs::TabInterface* devtools_tab =
++          tabs::TabInterface::MaybeGetFromContents(main_web_contents_);
++      if (devtools_tab && devtools_tab->GetBrowserWindowInterface()) {
++        if (TabListInterface* tab_list = TabListInterface::From(
++                devtools_tab->GetBrowserWindowInterface())) {
++          tab_list->ActivateTab(devtools_tab->GetHandle());
++        }
++      }
++      return;
++    }
++    content::WebContents* inspected = GetInspectedWebContents();
++    tabs::TabInterface* inspected_tab =
++        inspected ? tabs::TabInterface::MaybeGetFromContents(inspected)
++                  : nullptr;
++    TabListInterface* tab_list =
++        inspected_tab && inspected_tab->GetBrowserWindowInterface()
++            ? TabListInterface::From(inspected_tab->GetBrowserWindowInterface())
++            : nullptr;
++    if (tab_list) {
++      std::unique_ptr<content::WebContents> contents =
++          OwnedMainWebContents::TakeWebContents(
++              std::move(owned_main_web_contents_));
++      if (contents) {
++        tabs::TabInterface* devtools_tab = tab_list->InsertWebContentsAt(
++            tab_list->GetIndexOfTab(inspected_tab->GetHandle()) + 1,
++            std::move(contents), false, std::nullopt);
++        if (devtools_tab) {
++          tab_list->ActivateTab(devtools_tab->GetHandle());
++        }
++        OverrideAndSyncDevToolsRendererPrefs();
++      }
++      return;
++    }
++  }
+   if (!owned_main_web_contents_ || launched_activity_) {
+     return;
+   }
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java b/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
+@@ -137,6 +137,8 @@
+     private final TabGroupItemBuilder mTabGroupItemBuilder;
+     private final HistoryItemBuilder mHistoryItemBuilder;
+     private SaveAndShareItemBuilder mSaveAndShareItemBuilder;
++    public static final String DEVTOOLS_OPEN_IN_NEW_TAB_PREF = "devtools.android_open_in_new_tab";
++
+     private final MoreToolsItemBuilder mMoreToolsItemBuilder;
+ 
+     private boolean mUpdateMenuItemVisible;
+@@ -1331,6 +1333,7 @@
+ 
+                     if (mMoreToolsItemBuilder.shouldShowDevToolsItem(currentTab)) {
+                         submenuItems.add(mMoreToolsItemBuilder.buildDevToolsItem());
++                        submenuItems.add(buildDevToolsNewTabItem());
+                     }
+ 
+                     if (!submenuItems.isEmpty()
+@@ -1366,6 +1369,9 @@
+                     if (TaskManager.isEnabled()) {
+                         submenuItems.add(mMoreToolsItemBuilder.buildTaskManagerItem());
+                     }
++                    if (mMoreToolsItemBuilder.shouldShowDevToolsItem(currentTab)) {
++                        submenuItems.add(buildDevToolsNewTabItem());
++                    }
+                     return submenuItems;
+                 };
+ 
+@@ -1383,6 +1389,28 @@
+                         isMenuIconAtStart()));
+     }
+ 
++    private ListItem buildDevToolsNewTabItem() {
++        boolean isChecked =
++                UserPrefs.get(getProfileFromTabModel().getOriginalProfile())
++                        .getBoolean(DEVTOOLS_OPEN_IN_NEW_TAB_PREF);
++        PropertyModel model =
++                AppMenuItemUtils.buildModelForMenuItemWithCheckbox(
++                        mContext,
++                        getAppMenuItemTheme(),
++                        R.id.dev_tools_new_tab_id,
++                        R.string.menu_dev_tools_new_tab,
++                        0,
++                        R.id.dev_tools_new_tab_check_id,
++                        isChecked,
++                        isMenuIconAtStart());
++        model.set(AppMenuItemProperties.KEEP_MENU_OPEN, true);
++        model.get(AppMenuItemProperties.ADDITIONAL_ICONS)
++                .get(0)
++                .model
++                .set(AppMenuItemProperties.KEEP_MENU_OPEN, true);
++        return new ListItem(AppMenuHandler.AppMenuItemType.TITLE_BUTTON, model);
++    }
++
+     @Contract("null -> false")
+     private boolean shouldShowGetImageDescriptionsItem(@Nullable Tab currentTab) {
+         return currentTab != null
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/app/ChromeActivity.java b/chrome/android/java/src/org/chromium/chrome/browser/app/ChromeActivity.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/app/ChromeActivity.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/app/ChromeActivity.java
+@@ -200,6 +200,7 @@
+ import org.chromium.chrome.browser.tab.TabState;
+ import org.chromium.chrome.browser.tab.TabUtils;
+ import org.chromium.chrome.browser.tab_ui.TabContentManager;
++import org.chromium.chrome.browser.tabbed_mode.TabbedAppMenuPropertiesDelegate;
+ import org.chromium.chrome.browser.tabmodel.IncognitoTabModelObserver;
+ import org.chromium.chrome.browser.tabmodel.SupportedProfileType;
+ import org.chromium.chrome.browser.tabmodel.TabCreator;
+@@ -3241,6 +3242,15 @@
+             return AppInstallMenuHandler.doOpenWebApk(this, currentTab);
+         }
+ 
++        if (id == R.id.dev_tools_new_tab_id || id == R.id.dev_tools_new_tab_check_id) {
++            PrefService prefs =
++                    UserPrefs.get(getCurrentTabModel().getProfile().getOriginalProfile());
++            prefs.setBoolean(
++                    TabbedAppMenuPropertiesDelegate.DEVTOOLS_OPEN_IN_NEW_TAB_PREF,
++                    !prefs.getBoolean(TabbedAppMenuPropertiesDelegate.DEVTOOLS_OPEN_IN_NEW_TAB_PREF));
++            return true;
++        }
++
+         if (id == R.id.request_desktop_site_id || id == R.id.request_desktop_site_check_id) {
+             boolean usingDesktopUserAgent =
+                     currentTab.getWebContents().getNavigationController().getUseDesktopUserAgent();
+diff --git a/chrome/browser/ui/android/appmenu/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuItemProperties.java b/chrome/browser/ui/android/appmenu/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuItemProperties.java
+--- a/chrome/browser/ui/android/appmenu/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuItemProperties.java
++++ b/chrome/browser/ui/android/appmenu/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuItemProperties.java
+@@ -63,6 +63,9 @@
+     public static final WritableBooleanPropertyKey MANAGED =
+             new WritableBooleanPropertyKey("MANAGED");
+ 
++    public static final WritableBooleanPropertyKey KEEP_MENU_OPEN =
++            new WritableBooleanPropertyKey("KEEP_MENU_OPEN");
++
+     /** The icon for the menu item. */
+     public static final WritableObjectPropertyKey<Drawable> ICON =
+             new WritableObjectPropertyKey<>("ICON");
+@@ -130,7 +133,8 @@
+                 ICON,
+                 ENABLED,
+                 HIGHLIGHTED,
+-                CLICK_HANDLER
++                CLICK_HANDLER,
++                KEEP_MENU_OPEN
+             };
+ 
+     public static final PropertyKey[] ALL_KEYS =
+@@ -154,6 +158,7 @@
+                 KEY_LISTENER,
+                 MENU_ICON_AT_START,
+                 ADDITIONAL_ICONS,
++                KEEP_MENU_OPEN,
+                 ICON_NO_TINT,
+                 ICON_SUPPLIER
+             };
+diff --git a/chrome/browser/ui/android/appmenu/internal/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuHandlerImpl.java b/chrome/browser/ui/android/appmenu/internal/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuHandlerImpl.java
+--- a/chrome/browser/ui/android/appmenu/internal/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuHandlerImpl.java
++++ b/chrome/browser/ui/android/appmenu/internal/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuHandlerImpl.java
+@@ -519,8 +519,11 @@
+             return;
+         }
+ 
+-        mAppMenu.setSelectedItemBeforeDismiss(true);
+-        mAppMenu.dismiss();
++        if (!model.containsKey(AppMenuItemProperties.KEEP_MENU_OPEN)
++                || !model.get(AppMenuItemProperties.KEEP_MENU_OPEN)) {
++            mAppMenu.setSelectedItemBeforeDismiss(true);
++            mAppMenu.dismiss();
++        }
+ 
+         if (mTestOptionsItemSelectedListener != null) {
+             mTestOptionsItemSelectedListener.onResult(itemId);
+diff --git a/chrome/browser/ui/android/appmenu/internal/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuItemViewBinder.java b/chrome/browser/ui/android/appmenu/internal/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuItemViewBinder.java
+--- a/chrome/browser/ui/android/appmenu/internal/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuItemViewBinder.java
++++ b/chrome/browser/ui/android/appmenu/internal/java/src/org/chromium/chrome/browser/ui/appmenu/AppMenuItemViewBinder.java
+@@ -120,6 +120,7 @@
+                 // primary text container and secondary action buttons act as independent focus and
+                 // click targets for keyboard, D-pad, and touch navigation.
+                 setupClickHandler(titleContainer, model);
++                setupKeepOpenCheckbox(model, view);
+                 return;
+             }
+         } else if (key == AppMenuItemProperties.ENABLED) {
+@@ -135,6 +136,23 @@
+         // All other properties are handled by the standard binder.
+         bindStandardItem(model, view, key);
+ 
++        if (key == AppMenuItemProperties.TITLE) {
++            View icon = view.findViewById(R.id.menu_item_icon);
++            TextView text = view.findViewById(R.id.menu_item_text);
++            if (icon != null && text != null) {
++                if (text.getTag(R.id.menu_item_text) == null) {
++                    text.setTag(R.id.menu_item_text, text.getPaddingStart());
++                }
++                boolean hasIcon = model.get(AppMenuItemProperties.ICON) != null;
++                if (!hasIcon) icon.setVisibility(View.GONE);
++                text.setPaddingRelative(
++                        hasIcon ? (int) text.getTag(R.id.menu_item_text) : 0,
++                        text.getPaddingTop(),
++                        text.getPaddingEnd(),
++                        text.getPaddingBottom());
++            }
++        }
++
+         if (key == AppMenuItemProperties.ADDITIONAL_ICONS) {
+             ModelList subList = model.get(AppMenuItemProperties.ADDITIONAL_ICONS);
+             assert subList.size() == 1;
+@@ -202,7 +220,37 @@
+                         titleContainer.getPaddingBottom());
+                 ta.recycle();
+             }
++            setupKeepOpenCheckbox(model, view);
++        }
++    }
++
++    private static void setupKeepOpenCheckbox(PropertyModel model, View view) {
++        if (!model.containsKey(AppMenuItemProperties.KEEP_MENU_OPEN)
++                || !model.get(AppMenuItemProperties.KEEP_MENU_OPEN)) {
++            return;
++        }
++        AppMenuClickHandler clickHandler = model.get(AppMenuItemProperties.CLICK_HANDLER);
++        ModelList subList = model.get(AppMenuItemProperties.ADDITIONAL_ICONS);
++        View titleContainer = view.findViewById(R.id.menu_item_container);
++        AppMenuItemIcon checkbox = view.findViewById(R.id.checkbox);
++        if (clickHandler == null
++                || subList == null
++                || subList.size() != 1
++                || titleContainer == null
++                || checkbox == null) {
++            return;
+         }
++        PropertyModel checkboxModel = subList.get(0).model;
++        View.OnClickListener toggle =
++                v -> {
++                    boolean checked = !checkboxModel.get(AppMenuItemProperties.CHECKED);
++                    checkboxModel.set(AppMenuItemProperties.CHECKED, checked);
++                    checkbox.setChecked(checked);
++                    clickHandler.onItemClick(checkboxModel);
++                };
++        titleContainer.setOnTouchListener(null);
++        titleContainer.setOnClickListener(toggle);
++        checkbox.setOnClickListener(toggle);
+     }
+ 
+     /* package */ static void bindIconRowItem(PropertyModel model, View view, PropertyKey key) {
+diff --git a/chrome/android/java/res/values/ids.xml b/chrome/android/java/res/values/ids.xml
+--- a/chrome/android/java/res/values/ids.xml
++++ b/chrome/android/java/res/values/ids.xml
+@@ -42,6 +42,8 @@
+     <item type="id" name="open_tab_strip_context_menu" />
+     <item type="id" name="focus_bookmarks" />
+     <item type="id" name="dev_tools" />
++    <item type="id" name="dev_tools_new_tab_id" />
++    <item type="id" name="dev_tools_new_tab_check_id" />
+     <item type="id" name="task_manager" />
+     <item type="id" name="esc_key" />
+     <item type="id" name="feedback_form" />
+diff --git a/chrome/browser/ui/android/strings/android_chrome_strings.grd b/chrome/browser/ui/android/strings/android_chrome_strings.grd
+--- a/chrome/browser/ui/android/strings/android_chrome_strings.grd
++++ b/chrome/browser/ui/android/strings/android_chrome_strings.grd
+@@ -4521,6 +4521,9 @@
+       <message name="IDS_MENU_DEV_TOOLS" desc="Menu item to show developer tools. [CHAR_LIMIT=27]">
+         Developer tools
+       </message>
++      <message name="IDS_MENU_DEV_TOOLS_NEW_TAB" desc="Menu checkbox to open developer tools in a new tab instead of a separate window. [CHAR_LIMIT=27]">
++        New tab
++      </message>
+       <message name="IDS_MENU_SETTINGS" desc="Menu item for opening browser settings. [CHAR_LIMIT=27]">
+         Settings
+       </message>
