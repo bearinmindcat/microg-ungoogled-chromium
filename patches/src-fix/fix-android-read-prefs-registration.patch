@@ -2,11 +2,10 @@ author: bearinmindcat <bearincrypto@gmail.com>
 
 --- a/components/signin/internal/identity_manager/primary_account_manager.cc
 +++ b/components/signin/internal/identity_manager/primary_account_manager.cc
-@@ -272,6 +272,9 @@ PrimaryAccountManager::~PrimaryAccountMa
+@@ -272,6 +272,8 @@ PrimaryAccountManager::~PrimaryAccountMa
  
  // static
  void PrimaryAccountManager::RegisterProfilePrefs(PrefRegistrySimple* registry) {
-+  // registered by literal path: signin_pref_names.cc is not built here
 +  registry->RegisterBooleanPref("signin.allowed", true);
 +  registry->RegisterStringPref("google.services.last_username", std::string());
  }

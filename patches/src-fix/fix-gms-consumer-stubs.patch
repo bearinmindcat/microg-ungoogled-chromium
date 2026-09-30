@@ -1011,7 +1011,7 @@ author: bearinmindcat <bearincrypto@gmail.com>
      }
  
      /**
-@@ -74,30 +50,30 @@ public class GmsCoreUtils {
+@@ -74,30 +50,10 @@ public class GmsCoreUtils {
       * inner callback's invocation to the UI thread to avoid contention over state. Intent callbacks
       * can be run on a different thread from the one on which they were originally invoked.
       */
@@ -1024,15 +1024,6 @@ author: bearinmindcat <bearincrypto@gmail.com>
 -                    });
 -        };
 -    }
-+    // public static <T> OnSuccessListener<T> wrapSuccessCallback(OnSuccessListener<T> callback) {
-+    //     return (result) -> {
-+    //         PostTask.runOrPostTask(
-+    //                 TaskTraits.UI_USER_VISIBLE,
-+    //                 () -> {
-+    //                     callback.onSuccess(result);
-+    //                 });
-+    //     };
-+    // }
  
      /**
       * Returns a FailureListener callback that wraps another FailureListener callback, but posts the
@@ -1050,17 +1041,6 @@ author: bearinmindcat <bearincrypto@gmail.com>
 -                    });
 -        };
 -    }
-+    // public static OnFailureListener wrapFailureCallback(OnFailureListener callback) {
-+    //     // Post callbacks to UI thread to avoid contention over state, since this can be called
-+    //     // on a different thread than was originally used to invoke the Intent.
-+    //     return (e) -> {
-+    //         PostTask.runOrPostTask(
-+    //                 TaskTraits.UI_USER_VISIBLE,
-+    //                 () -> {
-+    //                     callback.onFailure(e);
-+    //                 });
-+    //     };
-+    // }
  }
 --- a/components/webauthn/android/java/src/org/chromium/components/webauthn/IdentityCredentialsHelper.java
 +++ b/components/webauthn/android/java/src/org/chromium/components/webauthn/IdentityCredentialsHelper.java

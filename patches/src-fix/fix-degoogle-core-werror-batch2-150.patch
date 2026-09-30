@@ -40,11 +40,10 @@ author: bearinmindcat <bearincrypto@gmail.com>
  
 --- a/chrome/browser/safe_browsing/chrome_safe_browsing_blocking_page_factory.cc
 +++ b/chrome/browser/safe_browsing/chrome_safe_browsing_blocking_page_factory.cc
-@@ -2,6 +2,9 @@
+@@ -2,6 +2,8 @@
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
  
-+// safe-browsing removal shadows a prefs var
 +#pragma clang diagnostic ignored "-Wshadow"
 +
  #include "chrome/browser/safe_browsing/chrome_safe_browsing_blocking_page_factory.h"
@@ -154,11 +153,10 @@ author: bearinmindcat <bearincrypto@gmail.com>
  }  // namespace
 --- a/components/translate/core/browser/translate_ranker_impl.cc
 +++ b/components/translate/core/browser/translate_ranker_impl.cc
-@@ -2,6 +2,9 @@
+@@ -2,6 +2,8 @@
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
  
-+// kill-Translate returns early, leaving dead ranker code
 +#pragma clang diagnostic ignored "-Wunreachable-code"
 +
  #include "components/translate/core/browser/translate_ranker_impl.h"

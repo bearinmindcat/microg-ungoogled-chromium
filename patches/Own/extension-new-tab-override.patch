@@ -1,0 +1,48 @@
+subject: Let extensions replace the New Tab page on phones
+
+New tab extensions like TablissNG set chrome_url_overrides.newtab, but Android only
+follows that override when ChromeNativeUrlOverriding is on, and upstream only turns it
+on for desktop Android. Turn it on by default, in both the native feature and its
+cached Java flag. A cold start on an overridden New Tab page no longer waits for a
+native page that never gets created, so it doesn't sit on the logo.
+Based on Aerium.
+---
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java b/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java
+@@ -2617,7 +2617,10 @@
+                 Tab currentTab = getActivityTab();
+                 boolean isTabNtp = isTabRegularNtp(currentTab);
+                 boolean isTabWebUiNtp = UrlOverrideUtils.isWebUiNtpOverrideEnabled();
+-                if (isTabNtp && !currentTab.isNativePage() && !isTabWebUiNtp) {
++                if (isTabNtp
++                        && !currentTab.isNativePage()
++                        && !isTabWebUiNtp
++                        && !UrlOverrideUtils.isNtpOverrideEnabled()) {
+                     // This will be a NTP, but the native page hasn't been created yet. Need to wait
+                     // for this to be created before allowing the toolbar to draw. The WebUI NTP is
+                     // not a native Tab, so we don't wait for it to be created, otherwise it hangs
+diff --git a/chrome/browser/flags/android/chrome_feature_list.cc b/chrome/browser/flags/android/chrome_feature_list.cc
+--- a/chrome/browser/flags/android/chrome_feature_list.cc
++++ b/chrome/browser/flags/android/chrome_feature_list.cc
+@@ -708,7 +708,7 @@
+ BASE_FEATURE(kCctTabResumption, base::FEATURE_DISABLED_BY_DEFAULT);
+ BASE_FEATURE(kChangeUnfocusedPriority, base::FEATURE_DISABLED_BY_DEFAULT);
+ BASE_FEATURE(kChromeItemPickerUi, base::FEATURE_ENABLED_BY_DEFAULT);
+-BASE_FEATURE(kChromeNativeUrlOverriding, base::FEATURE_DISABLED_BY_DEFAULT);
++BASE_FEATURE(kChromeNativeUrlOverriding, base::FEATURE_ENABLED_BY_DEFAULT);
+ BASE_FEATURE(kChromeSurveyNextAndroid, base::FEATURE_ENABLED_BY_DEFAULT);
+ BASE_FEATURE(kClampAutomotiveScaling, base::FEATURE_ENABLED_BY_DEFAULT);
+ BASE_FEATURE(kClankStartupLatencyInjection, base::FEATURE_DISABLED_BY_DEFAULT);
+diff --git a/chrome/browser/flags/android/java/src/org/chromium/chrome/browser/flags/ChromeFeatureList.java b/chrome/browser/flags/android/java/src/org/chromium/chrome/browser/flags/ChromeFeatureList.java
+--- a/chrome/browser/flags/android/java/src/org/chromium/chrome/browser/flags/ChromeFeatureList.java
++++ b/chrome/browser/flags/android/java/src/org/chromium/chrome/browser/flags/ChromeFeatureList.java
+@@ -913,7 +913,7 @@
+     public static final CachedFlag sChromeItemPickerUi =
+             newCachedFlag(CHROME_ITEM_PICKER_UI, /* defaultValue= */ true);
+     public static final CachedFlag sChromeNativeUrlOverriding =
+-            newCachedFlag(CHROME_NATIVE_URL_OVERRIDING, BuildConfig.IS_DESKTOP_ANDROID_FALSE);
++            newCachedFlag(CHROME_NATIVE_URL_OVERRIDING, true);
+     public static final CachedFlag sClampAutomotiveScaling =
+             newCachedFlag(CLAMP_AUTOMOTIVE_SCALING, true);
+     public static final CachedFlag sClankStartupLatencyInjection =

@@ -20,7 +20,7 @@ author: bearinmindcat <bearincrypto@gmail.com>
    return Profile::FromJavaObject(j_profile)->GetPrefs();
  }
  
-@@ -37,61 +37,46 @@ namespace safe_browsing {
+@@ -37,61 +37,45 @@ namespace safe_browsing {
  static int32_t JNI_SafeBrowsingBridge_UmaValueForFile(
      JNIEnv* env,
      const JavaRef<jstring>& path) {
@@ -61,7 +61,6 @@ author: bearinmindcat <bearincrypto@gmail.com>
      const JavaRef<jobject>& j_profile) {
 -  return static_cast<int32_t>(
 -      safe_browsing::GetSafeBrowsingState(*GetPrefService(j_profile)));
-+  // NO_SAFE_BROWSING
 +  return 0;
  }
  
@@ -91,7 +90,7 @@ author: bearinmindcat <bearincrypto@gmail.com>
  }
  
  static bool JNI_SafeBrowsingBridge_IsHashRealTimeLookupEligibleInSession(
-@@ -105,9 +90,6 @@ static void JNI_SafeBrowsingBridge_Repor
+@@ -105,9 +89,6 @@ static void JNI_SafeBrowsingBridge_Repor
      content::WebContents* web_contents,
      const std::string& package_name,
      const std::string& uri) {
