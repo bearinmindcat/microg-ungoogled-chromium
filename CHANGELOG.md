@@ -1,3 +1,11 @@
+# 152.0.7977.82-4
+* Extensions open new tabs (enabled by default)
+* Fix extension proxy & HTTP logins
+
+# 152.0.7977.82-3
+* Added dev tools
+* Fix extension removal crash
+
 # 152.0.7977.82-2
 * Fixed misc issues with developer mode
 * Added pure black theme for amoled devices
