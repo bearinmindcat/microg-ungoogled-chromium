@@ -94,6 +94,9 @@ Bromite/Revert-flags-remove-disable-pull-to-refresh-effect.patch
 Bromite/Disable-DRM-media-origin-IDs-preprovisioning.patch
 Bromite/Add-an-always-incognito-mode.patch
 Cromite/Add-bookmark-import-export-actions.patch
+src-fix/fix-android-extra-locales-cy-154.patch
+#src-fix/fix-gms-dangling-deps-154.patch
+src-fix/fix-android-download-obfuscation-154.patch
 Cromite/UI/Enable-darken-websites-checkbox-in-themes.patch
 
 #Other/debug-fix.patch

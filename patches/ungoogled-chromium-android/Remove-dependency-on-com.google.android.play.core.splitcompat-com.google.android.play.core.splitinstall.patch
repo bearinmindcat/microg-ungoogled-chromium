@@ -14,10 +14,9 @@ Subject: Remove dependency on com.google.android.play.core.splitcompat, com.goog
   third_party/android_deps/autorolled/BUILD.gn       | 66 ---------------
   9 files changed, 14 insertions(+), 243 deletions(-)
 
-diff --git a/chrome/android/BUILD.gn b/chrome/android/BUILD.gn
 --- a/chrome/android/BUILD.gn
 +++ b/chrome/android/BUILD.gn
-@@ -805,7 +805,6 @@
+@@ -809,7 +809,6 @@ if (_is_default_toolchain) {
        "//third_party/android_deps:com_google_errorprone_error_prone_annotations_java",
        "//third_party/android_deps:guava_android_java",
        "//third_party/android_deps:material_design_java",
@@ -25,7 +24,7 @@ diff --git a/chrome/android/BUILD.gn b/chrome/android/BUILD.gn
        "//third_party/android_deps:protobuf_lite_runtime_java",
        "//third_party/android_media:android_media_java",
        "//third_party/android_swipe_refresh:android_swipe_refresh_java",
-@@ -2179,7 +2178,6 @@
+@@ -2195,7 +2194,6 @@ if (_is_default_toolchain) {
        "//components/policy/android:policy_java",
        "//components/variations/android:variations_java",
        "//third_party/android_deps:material_design_java",
@@ -33,21 +32,19 @@ diff --git a/chrome/android/BUILD.gn b/chrome/android/BUILD.gn
        "//third_party/androidx:androidx_annotation_annotation_java",
        "//third_party/androidx:androidx_appcompat_appcompat_java",
        "//third_party/androidx:androidx_collection_collection_java",
-diff --git a/chrome/browser/language/android/BUILD.gn b/chrome/browser/language/android/BUILD.gn
 --- a/chrome/browser/language/android/BUILD.gn
 +++ b/chrome/browser/language/android/BUILD.gn
-@@ -18,7 +18,6 @@
-     "//build/android:build_java",
+@@ -19,7 +19,6 @@ android_library("base_module_java") {
      "//chrome/browser/preferences:java",
+     "//chrome/browser/settings:settings_in_tab_java",
      "//components/language/android:java",
 -    "//third_party/android_deps:playcore_java",
      "//third_party/androidx:androidx_annotation_annotation_java",
      "//ui/android:ui_no_recycler_view_java",
    ]
-diff --git a/chrome/browser/language/android/java/src/org/chromium/chrome/browser/language/LanguageSplitInstaller.java b/chrome/browser/language/android/java/src/org/chromium/chrome/browser/language/LanguageSplitInstaller.java
 --- a/chrome/browser/language/android/java/src/org/chromium/chrome/browser/language/LanguageSplitInstaller.java
 +++ b/chrome/browser/language/android/java/src/org/chromium/chrome/browser/language/LanguageSplitInstaller.java
-@@ -8,22 +8,13 @@
+@@ -8,22 +8,13 @@ import static org.chromium.build.NullUti
  
  import androidx.annotation.IntDef;
  
@@ -71,7 +68,7 @@ diff --git a/chrome/browser/language/android/java/src/org/chromium/chrome/browse
  import java.util.Set;
  
  /**
-@@ -66,16 +57,11 @@
+@@ -66,16 +57,11 @@ public class LanguageSplitInstaller {
          void onComplete(boolean success);
      }
  
@@ -89,7 +86,7 @@ diff --git a/chrome/browser/language/android/java/src/org/chromium/chrome/browse
  
      /**
       * Get the set of installed languages as language code strings.
-@@ -83,7 +69,7 @@
+@@ -83,7 +69,7 @@ public class LanguageSplitInstaller {
       * @return Set<String> of installed languages code strings.
       */
      public Set<String> getInstalledLanguages() {
@@ -98,7 +95,7 @@ diff --git a/chrome/browser/language/android/java/src/org/chromium/chrome/browse
      }
  
      /**
-@@ -113,29 +99,8 @@
+@@ -113,29 +99,8 @@ public class LanguageSplitInstaller {
          }
  
          mInstallListener = listener;
@@ -129,7 +126,7 @@ diff --git a/chrome/browser/language/android/java/src/org/chromium/chrome/browse
      }
  
      /**
-@@ -146,62 +111,16 @@
+@@ -146,62 +111,16 @@ public class LanguageSplitInstaller {
      private void installFinished(boolean success) {
          assumeNonNull(mInstallListener);
          mInstallListener.onComplete(success);
@@ -195,18 +192,17 @@ diff --git a/chrome/browser/language/android/java/src/org/chromium/chrome/browse
          @LanguageSplitInstallStatus int enumCode = getEnumCodeFromStatus(status);
          RecordHistogram.recordEnumeratedHistogram(
                  "LanguageSettings.SplitInstallFinalStatus",
-diff --git a/components/module_installer/android/BUILD.gn b/components/module_installer/android/BUILD.gn
 --- a/components/module_installer/android/BUILD.gn
 +++ b/components/module_installer/android/BUILD.gn
-@@ -29,7 +29,6 @@
-     "$google_play_services_package:google_play_services_tasks_java",
+@@ -28,7 +28,6 @@ android_library("module_installer_java")
+   deps = [
      "//base:base_java",
      "//components/crash/android:java",
 -    "//third_party/android_deps:playcore_java",
      "//third_party/androidx:androidx_annotation_annotation_java",
      "//third_party/jni_zero:jni_zero_java",
    ]
-@@ -51,7 +50,6 @@
+@@ -49,7 +48,6 @@ robolectric_binary("module_installer_jun
      "//base:base_java",
      "//base:base_java_test_support",
      "//base:base_junit_test_support",
@@ -214,10 +210,9 @@ diff --git a/components/module_installer/android/BUILD.gn b/components/module_in
      "//third_party/hamcrest:hamcrest_java",
    ]
  }
-diff --git a/components/module_installer/android/java/src/org/chromium/components/module_installer/engine/SplitCompatEngine.java b/components/module_installer/android/java/src/org/chromium/components/module_installer/engine/SplitCompatEngine.java
 --- a/components/module_installer/android/java/src/org/chromium/components/module_installer/engine/SplitCompatEngine.java
 +++ b/components/module_installer/android/java/src/org/chromium/components/module_installer/engine/SplitCompatEngine.java
-@@ -10,25 +10,18 @@
+@@ -10,25 +10,18 @@ import android.app.Activity;
  
  import androidx.annotation.VisibleForTesting;
  
@@ -243,7 +238,7 @@ diff --git a/components/module_installer/android/java/src/org/chromium/component
      private static final Map<String, List<InstallListener>> sSessions = new HashMap<>();
  
      public SplitCompatEngine() {
-@@ -46,14 +39,11 @@
+@@ -46,14 +39,11 @@ class SplitCompatEngine implements Insta
  
      @Override
      public boolean isInstalled(String moduleName) {
@@ -260,7 +255,7 @@ diff --git a/components/module_installer/android/java/src/org/chromium/component
  
      @Override
      public void install(String moduleName, InstallListener listener) {
-@@ -71,38 +61,7 @@
+@@ -71,38 +61,7 @@ class SplitCompatEngine implements Insta
          listeners.add(listener);
          sSessions.put(moduleName, listeners);
  
@@ -300,7 +295,7 @@ diff --git a/components/module_installer/android/java/src/org/chromium/component
      }
  
      private void notifyListeners(String moduleName, boolean success) {
-@@ -123,17 +82,9 @@
+@@ -123,17 +82,9 @@ class SplitCompatEngine implements Insta
          listener.onComplete(success);
      }
  
@@ -320,10 +315,9 @@ diff --git a/components/module_installer/android/java/src/org/chromium/component
  
      @VisibleForTesting
      public void resetSessionQueue() {
-diff --git a/components/module_installer/android/java/src/org/chromium/components/module_installer/engine/SplitCompatEngineFacade.java b/components/module_installer/android/java/src/org/chromium/components/module_installer/engine/SplitCompatEngineFacade.java
 --- a/components/module_installer/android/java/src/org/chromium/components/module_installer/engine/SplitCompatEngineFacade.java
 +++ b/components/module_installer/android/java/src/org/chromium/components/module_installer/engine/SplitCompatEngineFacade.java
-@@ -6,12 +6,6 @@
+@@ -6,12 +6,6 @@ package org.chromium.components.module_i
  
  import android.app.Activity;
  
@@ -336,7 +330,7 @@ diff --git a/components/module_installer/android/java/src/org/chromium/component
  import org.chromium.build.annotations.NullMarked;
  import org.chromium.components.module_installer.util.ModuleUtil;
  
-@@ -21,34 +15,17 @@
+@@ -21,34 +15,17 @@ import org.chromium.components.module_in
   */
  @NullMarked
  class SplitCompatEngineFacade {
@@ -372,7 +366,6 @@ diff --git a/components/module_installer/android/java/src/org/chromium/component
      public void updateCrashKeys() {
          ModuleUtil.updateCrashKeys();
      }
-diff --git a/components/module_installer/android/java/src/org/chromium/components/module_installer/util/SplitCompatInitializer.java b/components/module_installer/android/java/src/org/chromium/components/module_installer/util/SplitCompatInitializer.java
 --- a/components/module_installer/android/java/src/org/chromium/components/module_installer/util/SplitCompatInitializer.java
 +++ b/components/module_installer/android/java/src/org/chromium/components/module_installer/util/SplitCompatInitializer.java
 @@ -4,8 +4,6 @@
@@ -384,7 +377,7 @@ diff --git a/components/module_installer/android/java/src/org/chromium/component
  import org.chromium.base.ContextUtils;
  import org.chromium.base.StrictModeContext;
  import org.chromium.base.ThreadUtils;
-@@ -25,9 +23,8 @@
+@@ -25,9 +23,8 @@ class SplitCompatInitializer {
  
          // SplitCompat.install may copy modules into Chrome's internal folder or clean them up.
          try (StrictModeContext ignored = StrictModeContext.allowDiskWrites()) {
@@ -395,10 +388,9 @@ diff --git a/components/module_installer/android/java/src/org/chromium/component
      }
  
      public static boolean isInitialized() {
-diff --git a/third_party/android_deps/BUILD.gn b/third_party/android_deps/BUILD.gn
 --- a/third_party/android_deps/BUILD.gn
 +++ b/third_party/android_deps/BUILD.gn
-@@ -103,8 +103,6 @@
+@@ -101,8 +101,6 @@ if (!limit_android_deps) {
      preferred_dep = true
      if (defined(playcore_target)) {
        deps = [ playcore_target ]
@@ -406,11 +398,10 @@ diff --git a/third_party/android_deps/BUILD.gn b/third_party/android_deps/BUILD.
 -      deps = [ "//third_party/android_deps:com_google_android_play_feature_delivery_java" ]
      }
    }
- }
-diff --git a/third_party/android_deps/autorolled/BUILD.gn b/third_party/android_deps/autorolled/BUILD.gn
+ 
 --- a/third_party/android_deps/autorolled/BUILD.gn
 +++ b/third_party/android_deps/autorolled/BUILD.gn
-@@ -452,25 +452,6 @@
+@@ -114,23 +114,6 @@ template("define_autorolled_targets") {
  
      # This is generated, do not edit. Update BuildConfigGenerator.groovy
      # instead.
@@ -424,8 +415,6 @@ diff --git a/third_party/android_deps/autorolled/BUILD.gn b/third_party/android_
 -        # Please depend on //third_party/android_deps:playcore_java instead.
 -        visibility = [ "//third_party/android_deps:*" ]
 -        deps = [
--          "$google_play_services_package:google_play_services_basement_java",
--          "$google_play_services_package:google_play_services_tasks_java",
 -          "//third_party/android_deps:com_google_android_play_core_common_java",
 -        ]
 -      }
@@ -436,7 +425,7 @@ diff --git a/third_party/android_deps/autorolled/BUILD.gn b/third_party/android_
      android_aar_prebuilt("com_google_ar_impress_java") {
        aar_path = "autorolled/cipd/libs/com_google_ar_impress/impress.aar"
        info_path = "autorolled/committed/libs/com_google_ar_impress/com_google_ar_impress.info"
-@@ -1220,21 +1201,6 @@
+@@ -655,21 +638,6 @@ template("define_autorolled_targets") {
      }
  
      # This is generated, do not edit. Update BuildConfigGenerator.groovy
