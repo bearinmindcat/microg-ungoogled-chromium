@@ -11,7 +11,7 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebConte
  import org.chromium.content_public.browser.Page;
  import org.chromium.content_public.browser.WebContents;
  import org.chromium.content_public.browser.WebContentsObserver;
-@@ -284,6 +286,7 @@
+@@ -297,6 +299,7 @@
  
          @Override
          public void didStartNavigationInPrimaryMainFrame(NavigationHandle navigation) {
@@ -19,7 +19,7 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebConte
              if (!navigation.isSameDocument()) {
                  mTab.didStartPageLoad(navigation.getUrl());
                  mTab.setNavigationStartMs(navigation.getNavigationStartMs());
-@@ -295,6 +298,36 @@
+@@ -307,6 +310,36 @@
              }
          }
  
@@ -55,4 +55,4 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebConte
 +
          @Override
          public void didRedirectNavigation(NavigationHandle navigation) {
-             RewindableIterator<TabObserver> observers = mTab.getTabObservers();
+             for (TabObserver observer : mTab.getTabObservers()) {

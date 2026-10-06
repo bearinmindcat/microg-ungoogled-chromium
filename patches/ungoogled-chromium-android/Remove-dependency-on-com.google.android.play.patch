@@ -9,9 +9,10 @@ Subject: Remove dependency on com.google.android.play
   third_party/android_deps/autorolled/BUILD.gn       | 26 ----------
   4 files changed, 2 insertions(+), 86 deletions(-)
 
+diff --git a/chrome/android/BUILD.gn b/chrome/android/BUILD.gn
 --- a/chrome/android/BUILD.gn
 +++ b/chrome/android/BUILD.gn
-@@ -2230,9 +2230,6 @@ if (_is_default_toolchain) {
+@@ -2242,9 +2242,6 @@
        deps += [
          "//chrome/browser/ui/android/app_rating:play_review_aar_for_clank_java",
        ]
@@ -21,9 +22,10 @@ Subject: Remove dependency on com.google.android.play
      }
  
      if (dfmify_dev_ui) {
+diff --git a/chrome/browser/ui/android/app_rating/BUILD.gn b/chrome/browser/ui/android/app_rating/BUILD.gn
 --- a/chrome/browser/ui/android/app_rating/BUILD.gn
 +++ b/chrome/browser/ui/android/app_rating/BUILD.gn
-@@ -57,8 +57,6 @@ android_library("impl_java") {
+@@ -60,8 +60,6 @@
    ]
    if (enable_chrome_android_internal) {
      deps += [ ":play_review_aar_for_clank_java" ]
@@ -32,7 +34,7 @@ Subject: Remove dependency on com.google.android.play
    }
  }
  
-@@ -92,7 +90,5 @@ robolectric_library("junit") {
+@@ -95,7 +93,5 @@
    ]
    if (enable_chrome_android_internal) {
      deps += [ ":play_review_aar_for_clank_java" ]
@@ -40,9 +42,10 @@ Subject: Remove dependency on com.google.android.play
 -    deps += [ "//third_party/android_deps:com_google_android_play_review_java" ]
    }
  }
+diff --git a/chrome/browser/ui/android/app_rating/java/src/org/chromium/chrome/browser/ui/app_rating/AppRatingManagerImpl.java b/chrome/browser/ui/android/app_rating/java/src/org/chromium/chrome/browser/ui/app_rating/AppRatingManagerImpl.java
 --- a/chrome/browser/ui/android/app_rating/java/src/org/chromium/chrome/browser/ui/app_rating/AppRatingManagerImpl.java
 +++ b/chrome/browser/ui/android/app_rating/java/src/org/chromium/chrome/browser/ui/app_rating/AppRatingManagerImpl.java
-@@ -6,17 +6,6 @@ package org.chromium.chrome.browser.ui.a
+@@ -6,17 +6,6 @@
  
  import android.app.Activity;
  
@@ -60,7 +63,7 @@ Subject: Remove dependency on com.google.android.play
  import org.chromium.build.annotations.NullMarked;
  import org.chromium.build.annotations.ServiceImpl;
  
-@@ -24,50 +13,10 @@ import org.chromium.build.annotations.Se
+@@ -24,50 +13,10 @@
  @NullMarked
  @ServiceImpl(AppRatingManager.class)
  public class AppRatingManagerImpl implements AppRatingManager {
@@ -113,9 +116,10 @@ Subject: Remove dependency on com.google.android.play
 +        onComplete.run();
      }
  }
+diff --git a/third_party/android_deps/autorolled/BUILD.gn b/third_party/android_deps/autorolled/BUILD.gn
 --- a/third_party/android_deps/autorolled/BUILD.gn
 +++ b/third_party/android_deps/autorolled/BUILD.gn
-@@ -131,18 +131,6 @@ template("define_autorolled_targets") {
+@@ -471,20 +471,6 @@
  
      # This is generated, do not edit. Update BuildConfigGenerator.groovy
      # instead.
@@ -125,6 +129,8 @@ Subject: Remove dependency on com.google.android.play
 -      info_path = "autorolled/committed/libs/com_google_android_play_review/com_google_android_play_review.info"
 -      enable_bytecode_checks = false
 -      deps = [
+-        "$google_play_services_package:google_play_services_basement_java",
+-        "$google_play_services_package:google_play_services_tasks_java",
 -        "//third_party/android_deps:com_google_android_play_core_common_java",
 -      ]
 -    }

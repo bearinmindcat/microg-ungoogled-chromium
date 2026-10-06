@@ -1,7 +1,12 @@
+description: Add a quick extension toggle menu (Thorium, gz83/thorium@39b3c5d1)
+author: Ho Cheung <hocheung@chromium.org>
+license: BSD-3-Clause
+---
 diff --git a/chrome/app/generated_resources.grd b/chrome/app/generated_resources.grd
+index 1a1d9b744f19c..42c68fac75414 100644
 --- a/chrome/app/generated_resources.grd
 +++ b/chrome/app/generated_resources.grd
-@@ -6331,6 +6331,12 @@
+@@ -6425,6 +6425,12 @@ Keep your key file in a safe place. You will need it to create new versions of y
          <message name="IDS_EXTENSIONS_MENU_TITLE" desc="Title of the Extensions Menu" formatter_data="android_java">
            Extensions
          </message>
@@ -15,28 +20,34 @@ diff --git a/chrome/app/generated_resources.grd b/chrome/app/generated_resources
            More options
          </message>
 diff --git a/chrome/browser/ui/android/extensions/extensions_menu_delegate_android.cc b/chrome/browser/ui/android/extensions/extensions_menu_delegate_android.cc
+index 28fbc01b20c4b..8e0f838a4883f 100644
 --- a/chrome/browser/ui/android/extensions/extensions_menu_delegate_android.cc
 +++ b/chrome/browser/ui/android/extensions/extensions_menu_delegate_android.cc
-@@ -315,6 +315,15 @@
+@@ -322,6 +322,19 @@ void ExtensionsMenuDelegateAndroid::OnExtensionToggleSelected(
    }
  }
  
 +void ExtensionsMenuDelegateAndroid::OnExtensionEnableToggleSelected(
 +    const extensions::ExtensionId& extension_id,
 +    bool is_on) {
++  // The Android extensions menu does not expose the desktop quick enable
++  // manager section.
 +}
 +
 +void ExtensionsMenuDelegateAndroid::OnAllExtensionsEnableToggleSelected(
 +    bool is_on) {
++  // The Android extensions menu does not expose the desktop quick enable
++  // manager section.
 +}
 +
  void ExtensionsMenuDelegateAndroid::OnShowRequestsTogglePressed(
      const extensions::ExtensionId& extension_id,
      bool is_on) {
 diff --git a/chrome/browser/ui/android/extensions/extensions_menu_delegate_android.h b/chrome/browser/ui/android/extensions/extensions_menu_delegate_android.h
+index 880cba05f638c..eb570930753d6 100644
 --- a/chrome/browser/ui/android/extensions/extensions_menu_delegate_android.h
 +++ b/chrome/browser/ui/android/extensions/extensions_menu_delegate_android.h
-@@ -101,6 +101,10 @@
+@@ -101,6 +101,10 @@ class ExtensionsMenuDelegateAndroid : public ExtensionsMenuViewModel::Delegate,
    void OnExtensionToggleSelected(const extensions::ExtensionId& extension_id,
                                   const url::Origin& origin,
                                   bool is_on) override;
@@ -48,47 +59,54 @@ diff --git a/chrome/browser/ui/android/extensions/extensions_menu_delegate_andro
    void OnShowRequestsTogglePressed(const extensions::ExtensionId& extension_id,
                                     bool is_on) override;
 diff --git a/chrome/browser/ui/extensions/extensions_menu_handler.h b/chrome/browser/ui/extensions/extensions_menu_handler.h
+index 5de0ad6e04cc3..eee8ef63e7df9 100644
 --- a/chrome/browser/ui/extensions/extensions_menu_handler.h
 +++ b/chrome/browser/ui/extensions/extensions_menu_handler.h
-@@ -45,6 +45,12 @@
+@@ -45,6 +45,15 @@ class ExtensionsMenuHandler {
        const url::Origin& origin,
        bool is_on) = 0;
  
++  // Enables or disables `extension_id` from the quick manager section.
 +  virtual void OnExtensionEnableToggleSelected(
 +      const extensions::ExtensionId& extension_id,
 +      bool is_on) = 0;
 +
++  // Enables or disables all toggleable extensions from the quick manager
++  // section.
 +  virtual void OnAllExtensionsEnableToggleSelected(bool is_on) = 0;
 +
    // Reload the current web contents.
    virtual void OnReloadPageButtonClicked() = 0;
  
 diff --git a/chrome/browser/ui/ui_features.cc b/chrome/browser/ui/ui_features.cc
+index a8be823002b09..730ea14d0a4ae 100644
 --- a/chrome/browser/ui/ui_features.cc
 +++ b/chrome/browser/ui/ui_features.cc
-@@ -119,6 +119,9 @@
- // default.
- BASE_FEATURE(kExtensionsPinnedByDefault, base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -117,6 +117,9 @@ BASE_FEATURE(kLegacySearchIntegrityCheck, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kExtensionsCollapseMainMenu, base::FEATURE_DISABLED_BY_DEFAULT);
  
 +BASE_FEATURE(kExtensionsMenuQuickToggle,
 +             base::FEATURE_DISABLED_BY_DEFAULT);
 +
- #endif  // BUILDFLAG(ENABLE_EXTENSIONS_CORE)
- 
- #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC)
+ // When enabled, newly installed extensions are pinned to the toolbar by
+ // default.
+ BASE_FEATURE(kExtensionsPinnedByDefault, base::FEATURE_DISABLED_BY_DEFAULT);
 diff --git a/chrome/browser/ui/ui_features.h b/chrome/browser/ui/ui_features.h
+index 50bef0b62804e..ca820a8d2272f 100644
 --- a/chrome/browser/ui/ui_features.h
 +++ b/chrome/browser/ui/ui_features.h
-@@ -70,6 +70,8 @@
- // default.
- BASE_DECLARE_FEATURE(kExtensionsPinnedByDefault);
+@@ -69,6 +69,8 @@ bool IsWebuiRefresh2026Enabled();
+ // the "Discover Chrome Extensions" item will be present.
+ BASE_DECLARE_FEATURE(kExtensionsCollapseMainMenu);
  
 +BASE_DECLARE_FEATURE(kExtensionsMenuQuickToggle);
 +
- #endif  // BUILDFLAG(ENABLE_EXTENSIONS_CORE)
- 
- #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC)
+ // When enabled, newly installed extensions are pinned to the toolbar by
+ // default.
+ BASE_DECLARE_FEATURE(kExtensionsPinnedByDefault);
 diff --git a/chrome/browser/ui/views/extensions/extension_view_utils.cc b/chrome/browser/ui/views/extensions/extension_view_utils.cc
+index a0ce5fc1c9ef8..24f0fadc4abd5 100644
 --- a/chrome/browser/ui/views/extensions/extension_view_utils.cc
 +++ b/chrome/browser/ui/views/extensions/extension_view_utils.cc
 @@ -4,12 +4,24 @@
@@ -116,7 +134,7 @@ diff --git a/chrome/browser/ui/views/extensions/extension_view_utils.cc b/chrome
  
  ExtensionsContainerViews* GetExtensionsContainerViews(
      gfx::NativeWindow parent) {
-@@ -22,6 +34,97 @@
+@@ -22,6 +34,97 @@ ExtensionsContainerViews* GetExtensionsContainerViews(
                        : nullptr;
  }
  
@@ -215,6 +233,7 @@ diff --git a/chrome/browser/ui/views/extensions/extension_view_utils.cc b/chrome
  // action's image. The icon displayed should be the "product" icon and not the
  // "action" action based on the web contents.
 diff --git a/chrome/browser/ui/views/extensions/extension_view_utils.h b/chrome/browser/ui/views/extensions/extension_view_utils.h
+index 56f0cbe009a9e..20a9727adf213 100644
 --- a/chrome/browser/ui/views/extensions/extension_view_utils.h
 +++ b/chrome/browser/ui/views/extensions/extension_view_utils.h
 @@ -5,9 +5,14 @@
@@ -232,7 +251,7 @@ diff --git a/chrome/browser/ui/views/extensions/extension_view_utils.h b/chrome/
  class ToolbarActionViewModel;
  
  namespace content {
-@@ -18,6 +23,40 @@
+@@ -18,6 +23,40 @@ namespace ui {
  class ImageModel;
  }
  
@@ -274,27 +293,28 @@ diff --git a/chrome/browser/ui/views/extensions/extension_view_utils.h b/chrome/
  ExtensionsContainerViews* GetExtensionsContainerViews(gfx::NativeWindow parent);
  
 diff --git a/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop.cc b/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop.cc
+index 4f01efd742548..0eef437140ee3 100644
 --- a/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop.cc
 +++ b/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop.cc
-@@ -8,6 +8,8 @@
+@@ -6,7 +6,9 @@
  
- #include "base/check_deref.h"
- #include "base/functional/bind.h"
+ #include <algorithm>
+ 
 +#include "base/auto_reset.h"
+ #include "base/check_deref.h"
 +#include "base/feature_list.h"
+ #include "base/functional/bind.h"
  #include "base/i18n/case_conversion.h"
  #include "base/metrics/user_metrics.h"
- #include "base/metrics/user_metrics_action.h"
-@@ -31,6 +33,8 @@
- #include "chrome/browser/ui/views/extensions/extensions_menu_entry_view.h"
- #include "chrome/browser/ui/views/extensions/extensions_menu_main_page_view.h"
- #include "chrome/browser/ui/views/extensions/extensions_menu_site_permissions_page_view.h"
-+#include "chrome/browser/ui/views/extensions/extension_view_utils.h"
+@@ -24,6 +26,7 @@
+ #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
+ #include "chrome/browser/ui/toolbar/toolbar_action_view_model.h"
+ #include "chrome/browser/ui/toolbar/toolbar_actions_model.h"
 +#include "chrome/browser/ui/ui_features.h"
- #include "content/public/browser/web_contents.h"
- #include "extensions/browser/extension_system.h"
- #include "extensions/browser/permissions/active_tab_permission_granter.h"
-@@ -249,6 +253,7 @@
+ #include "chrome/browser/ui/views/chrome_layout_provider.h"
+ #include "chrome/browser/ui/views/extensions/extension_action_delegate_desktop.h"
+ #include "chrome/browser/ui/views/extensions/extension_view_utils.h"
+@@ -249,6 +252,7 @@ void ExtensionsMenuDelegateDesktop::OnActionAdded(
    }
  
    InsertMenuEntry(main_page, action_model, index);
@@ -302,15 +322,18 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop
  }
  
  void ExtensionsMenuDelegateDesktop::OnActionRemoved(
-@@ -270,6 +275,7 @@
+@@ -270,7 +274,9 @@ void ExtensionsMenuDelegateDesktop::OnActionRemoved(
    auto* main_page = GetMainPage(current_page_.view());
    CHECK(main_page);
    main_page->RemoveMenuEntry(index);
+-  if (main_page->GetMenuEntries().empty()) {
 +  MaybeUpdateExtensionQuickToggles(main_page);
++  if (main_page->GetMenuEntries().empty() &&
++      !base::FeatureList::IsEnabled(features::kExtensionsMenuQuickToggle)) {
+     CloseBubble();
+   }
  }
- 
- void ExtensionsMenuDelegateDesktop::OnActionUpdated(
-@@ -461,6 +467,23 @@
+@@ -468,6 +474,23 @@ void ExtensionsMenuDelegateDesktop::OnExtensionToggleSelected(
    }
  }
  
@@ -334,7 +357,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop
  void ExtensionsMenuDelegateDesktop::OnReloadPageButtonClicked() {
    menu_model_->ReloadWebContents();
  }
-@@ -520,6 +543,17 @@
+@@ -527,6 +550,17 @@ void ExtensionsMenuDelegateDesktop::UpdateMainPage(
          menu_model_->GetMenuEntryState(menu_entry->extension_id(), icon_size);
      menu_entry->Update(entry_state);
    }
@@ -353,9 +376,10 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop
  
  void ExtensionsMenuDelegateDesktop::UpdateSitePermissionsPage(
 diff --git a/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop.h b/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop.h
+index e5c088ab41a55..96d6623eee55b 100644
 --- a/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop.h
 +++ b/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop.h
-@@ -86,6 +86,10 @@
+@@ -85,6 +85,10 @@ class ExtensionsMenuDelegateDesktop : public ExtensionsMenuViewModel::Delegate,
    void OnExtensionToggleSelected(const extensions::ExtensionId& extension_id,
                                   const url::Origin& origin,
                                   bool is_on) override;
@@ -366,16 +390,17 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop
    void OnReloadPageButtonClicked() override;
    void OnAllowExtensionClicked(
        const extensions::ExtensionId& extension_id) override;
-@@ -119,6 +123,8 @@
+@@ -118,6 +122,9 @@ class ExtensionsMenuDelegateDesktop : public ExtensionsMenuViewModel::Delegate,
                         ExtensionActionViewModel* action_model,
                         int index);
  
++  // Updates the quick manager unless a bulk quick-toggle operation is active.
 +  void MaybeUpdateExtensionQuickToggles(ExtensionsMenuMainPageView* main_page);
 +
    const raw_ptr<BrowserWindowInterface> browser_;
    const raw_ref<ExtensionsContainer> extensions_container_;
    const raw_ptr<ExtensionsContainerViews> extensions_container_views_;
-@@ -126,6 +132,7 @@
+@@ -125,6 +132,7 @@ class ExtensionsMenuDelegateDesktop : public ExtensionsMenuViewModel::Delegate,
  
    // The platform-agnostic menu view model.
    std::unique_ptr<ExtensionsMenuViewModel> menu_model_;
@@ -384,9 +409,10 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_delegate_desktop
                            ExtensionsMenuViewModel::Observer>
        menu_model_observation_{this};
 diff --git a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.cc b/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.cc
+index f570d94215d6f..b6cb8a30f2312 100644
 --- a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.cc
 +++ b/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.cc
-@@ -9,16 +9,19 @@
+@@ -9,6 +9,7 @@
  #include <string_view>
  
  #include "base/check_is_test.h"
@@ -394,19 +420,33 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.c
  #include "base/functional/bind.h"
  #include "base/memory/raw_ptr.h"
  #include "base/metrics/user_metrics.h"
- #include "chrome/browser/ui/browser.h"
- #include "chrome/browser/ui/browser_element_identifiers.h"
- #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
-+#include "chrome/browser/ui/ui_features.h"
- #include "chrome/browser/ui/chrome_pages.h"
+@@ -18,9 +19,11 @@
  #include "chrome/browser/ui/color/chrome_color_id.h"
  #include "chrome/browser/ui/extensions/extension_action_view_model.h"
  #include "chrome/browser/ui/extensions/extensions_menu_handler.h"
-+#include "chrome/browser/ui/views/extensions/extension_view_utils.h"
++#include "chrome/browser/ui/ui_features.h"
  #include "chrome/browser/ui/views/chrome_layout_provider.h"
  #include "chrome/browser/ui/views/chrome_typography.h"
  #include "chrome/browser/ui/views/controls/hover_button.h"
-@@ -264,10 +267,18 @@
++#include "chrome/browser/ui/views/extensions/extension_view_utils.h"
+ #include "chrome/browser/ui/views/extensions/extensions_menu_entry_view.h"
+ #include "chrome/grit/generated_resources.h"
+ #include "components/vector_icons/vector_icons.h"
+@@ -214,6 +217,13 @@ ExtensionsMenuMainPageView::ExtensionsMenuMainPageView(
+           CreateManageButtonBuilder())
+       .BuildChildren();
+ 
++  quick_toggle_all_toggle_->SetCallback(base::BindRepeating(
++      [](ExtensionsMenuMainPageView* view) {
++        view->menu_handler_->OnAllExtensionsEnableToggleSelected(
++            view->quick_toggle_all_toggle_->GetIsOn());
++      },
++      base::Unretained(this)));
++
+   // By default, the button's accessible description is set to the button's
+   // tooltip text. This is the accepted workaround to ensure only accessible
+   // name is announced by a screenreader rather than tooltip text and
+@@ -263,10 +273,18 @@ void ExtensionsMenuMainPageView::CreateAndInsertMenuEntry(
    }
  
    menu_entries_->AddChildViewAt(std::move(item), index);
@@ -425,7 +465,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.c
  }
  
  void ExtensionsMenuMainPageView::UpdateSiteSettings(
-@@ -282,6 +293,76 @@
+@@ -281,6 +299,74 @@ void ExtensionsMenuMainPageView::UpdateSiteSettings(
        site_settings_state.toggle.tooltip_text);
  }
  
@@ -478,19 +518,17 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.c
 +                    .CopyAddressTo(&toggle)
 +                    .SetProperty(views::kMarginsKey,
 +                                 gfx::Insets::TLBR(0, horizontal_spacing, 0, 0))
-+                    .SetAccessibleName(state.display_name)
-+                    .SetCallback(base::BindRepeating(
-+                        [](views::ToggleButton* toggle_button,
-+                           base::RepeatingCallback<void(bool)> callback) {
-+                          callback.Run(toggle_button->GetIsOn());
-+                        },
-+                        toggle,
-+                        base::BindRepeating(
-+                            &ExtensionsMenuHandler::
-+                                OnExtensionEnableToggleSelected,
-+                            base::Unretained(menu_handler_), state.id))))
++                    .SetAccessibleName(state.display_name))
 +            .Build();
 +
++    toggle->SetCallback(base::BindRepeating(
++        [](views::ToggleButton* toggle_button,
++           ExtensionsMenuHandler* menu_handler,
++           extensions::ExtensionId extension_id) {
++          menu_handler->OnExtensionEnableToggleSelected(
++              extension_id, toggle_button->GetIsOn());
++        },
++        toggle, base::Unretained(menu_handler_), state.id));
 +    toggle->SetIsOn(state.enabled);
 +    toggle->SetEnabled(state.can_toggle);
 +    quick_toggle_entries_->AddChildView(std::move(row));
@@ -502,10 +540,11 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.c
  void ExtensionsMenuMainPageView::AddExtensionRequestingAccess(
      ExtensionsMenuViewModel::HostAccessRequest request,
      int index) {
-@@ -611,6 +692,74 @@
+@@ -610,6 +696,62 @@ ExtensionsMenuMainPageView::CreateContentsBuilder(
                                .CopyAddressTo(&requests_entries_view_)
                                .SetOrientation(
                                    views::BoxLayout::Orientation::kVertical)),
++                  // Quick enable/disable section.
 +                  views::Builder<SectionContainer>()
 +                      .CopyAddressTo(&quick_toggle_section_)
 +                      .SetProperty(
@@ -556,20 +595,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.c
 +                                          gfx::Insets::TLBR(0, 8, 0, 0))
 +                                      .SetAccessibleName(
 +                                          l10n_util::GetStringUTF16(
-+                                              IDS_EXTENSIONS_MENU_QUICK_TOGGLE_ALL_EXTENSIONS))
-+                                      .SetCallback(base::BindRepeating(
-+                                          [](views::ToggleButton* toggle_button,
-+                                             base::RepeatingCallback<void(bool)>
-+                                                 callback) {
-+                                            callback.Run(
-+                                                toggle_button->GetIsOn());
-+                                          },
-+                                          quick_toggle_all_toggle_,
-+                                          base::BindRepeating(
-+                                              &ExtensionsMenuHandler::
-+                                                  OnAllExtensionsEnableToggleSelected,
-+                                              base::Unretained(
-+                                                  menu_handler_))))),
++                                              IDS_EXTENSIONS_MENU_QUICK_TOGGLE_ALL_EXTENSIONS))),
 +                          views::Builder<views::BoxLayoutView>()
 +                              .CopyAddressTo(&quick_toggle_entries_)
 +                              .SetOrientation(
@@ -578,6 +604,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.c
                    views::Builder<SectionContainer>()
                        .CopyAddressTo(&menu_entries_)
 diff --git a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.h b/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.h
+index 4c949b172a72c..3e5c8f87a4d80 100644
 --- a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.h
 +++ b/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.h
 @@ -6,10 +6,12 @@
@@ -593,60 +620,58 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_main_page_view.h
  #include "chrome/browser/ui/views/extensions/extensions_menu_entry_view.h"
  #include "ui/base/metadata/metadata_header_macros.h"
  #include "ui/views/layout/flex_layout_view.h"
-@@ -54,6 +56,9 @@
+@@ -54,6 +56,11 @@ class ExtensionsMenuMainPageView : public views::View {
    void UpdateSiteSettings(
        ExtensionsMenuViewModel::SiteSettingsState site_settings_state);
  
++  // Updates the quick manager section that enables/disables installed
++  // extensions without opening chrome://extensions.
 +  void UpdateExtensionQuickToggles(
 +      std::vector<ExtensionQuickToggleState> states);
 +
    // Adds or updates the extension entry in the `requests_access_section_` at
    // `index` with the given information. Doesn't update the requests section
    // view visibility.
-@@ -138,6 +143,10 @@
+@@ -138,6 +145,12 @@ class ExtensionsMenuMainPageView : public views::View {
    // View that holds the requests entries in `requests_section_`.
    raw_ptr<views::View> requests_entries_view_;
  
++  // Quick manager section for enabling/disabling installed extensions.
 +  raw_ptr<views::View> quick_toggle_section_ = nullptr;
 +  raw_ptr<views::ToggleButton> quick_toggle_all_toggle_ = nullptr;
++  // View that holds quick manager rows.
 +  raw_ptr<views::View> quick_toggle_entries_ = nullptr;
 +
    // Menu entries section. The children are guaranteed to only be
    // ExtensionsMenuEntryView.
    raw_ptr<views::View> menu_entries_ = nullptr;
 diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.cc b/chrome/browser/ui/views/extensions/extensions_menu_view.cc
+index 8214be37b215e..207c0fcde2082 100644
 --- a/chrome/browser/ui/views/extensions/extensions_menu_view.cc
 +++ b/chrome/browser/ui/views/extensions/extensions_menu_view.cc
-@@ -8,10 +8,12 @@
- 
- #include "base/auto_reset.h"
- #include "base/check_deref.h"
-+#include "base/auto_reset.h"
- #include "base/feature_list.h"
- #include "base/i18n/case_conversion.h"
- #include "chrome/browser/ui/browser.h"
- #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
-+#include "chrome/browser/ui/ui_features.h"
- #include "chrome/browser/ui/chrome_pages.h"
+@@ -15,11 +15,13 @@
  #include "chrome/browser/ui/extensions/extension_action_view_model.h"
  #include "chrome/browser/ui/tabs/tab_strip_model.h"
-@@ -23,6 +25,7 @@
+ #include "chrome/browser/ui/toolbar/toolbar_action_view_model.h"
++#include "chrome/browser/ui/ui_features.h"
+ #include "chrome/browser/ui/views/bubble_menu_item_factory.h"
+ #include "chrome/browser/ui/views/chrome_layout_provider.h"
+ #include "chrome/browser/ui/views/chrome_typography.h"
+ #include "chrome/browser/ui/views/controls/hover_button.h"
  #include "chrome/browser/ui/views/extensions/extension_action_delegate_desktop.h"
++#include "chrome/browser/ui/views/extensions/extension_view_utils.h"
  #include "chrome/browser/ui/views/extensions/extensions_container_views.h"
  #include "chrome/browser/ui/views/extensions/extensions_menu_item_view.h"
-+#include "chrome/browser/ui/views/extensions/extension_view_utils.h"
  #include "chrome/grit/generated_resources.h"
- #include "components/vector_icons/vector_icons.h"
- #include "extensions/common/extension_features.h"
-@@ -35,6 +38,7 @@
+@@ -33,6 +35,7 @@
+ #include "ui/gfx/geometry/insets.h"
  #include "ui/views/accessibility/view_accessibility.h"
  #include "ui/views/border.h"
- #include "ui/views/controls/label.h"
 +#include "ui/views/controls/button/toggle_button.h"
+ #include "ui/views/controls/label.h"
  #include "ui/views/controls/scroll_view.h"
  #include "ui/views/controls/separator.h"
- #include "ui/views/layout/box_layout.h"
-@@ -151,6 +155,7 @@
+@@ -149,6 +152,7 @@ void ExtensionsMenuView::Populate() {
    // wouldn't ever pop up so that they pop outside the screen.
    constexpr int kMaxExtensionButtonsHeightDp = 448;
    auto scroll_view = std::make_unique<views::ScrollView>();
@@ -654,7 +679,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.cc b/chrome
    scroll_view->ClipHeightTo(0, kMaxExtensionButtonsHeightDp);
    scroll_view->SetDrawOverflowIndicator(false);
    scroll_view->SetHorizontalScrollBarMode(
-@@ -259,6 +264,9 @@
+@@ -257,6 +261,9 @@ ExtensionsMenuView::CreateExtensionButtonsContainer() {
      extension_buttons->AddChildView(std::move(container));
    };
  
@@ -664,7 +689,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.cc b/chrome
    create_section(&has_access_);
    create_section(&wants_access_);
    create_section(&cant_access_);
-@@ -266,6 +274,157 @@
+@@ -264,6 +271,157 @@ ExtensionsMenuView::CreateExtensionButtonsContainer() {
    return extension_buttons;
  }
  
@@ -822,7 +847,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.cc b/chrome
  ExtensionsMenuView::Section* ExtensionsMenuView::GetSectionForSiteInteraction(
      extensions::SitePermissionsHelper::SiteInteraction site_interaction) {
    Section* section = nullptr;
-@@ -353,6 +512,21 @@
+@@ -351,6 +509,21 @@ void ExtensionsMenuView::UpdateSectionVisibility() {
    update_section(&cant_access_);
  }
  
@@ -844,7 +869,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.cc b/chrome
  void ExtensionsMenuView::Update() {
    content::WebContents* const web_contents =
        browser_->GetTabStripModel()->GetActiveWebContents();
-@@ -383,6 +557,7 @@
+@@ -381,6 +554,7 @@ void ExtensionsMenuView::Update() {
  
    SortMenuItemsByName();
    UpdateSectionVisibility();
@@ -852,7 +877,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.cc b/chrome
  
    SanityCheck();
  }
-@@ -448,6 +623,7 @@
+@@ -445,6 +619,7 @@ void ExtensionsMenuView::OnToolbarActionAdded(
    CreateAndInsertNewItem(item);
    SortMenuItemsByName();
    UpdateSectionVisibility();
@@ -860,7 +885,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.cc b/chrome
  
    SanityCheck();
  }
-@@ -465,6 +641,7 @@
+@@ -462,6 +637,7 @@ void ExtensionsMenuView::OnToolbarActionRemoved(
    extensions_menu_items_.erase(iter);
  
    UpdateSectionVisibility();
@@ -868,7 +893,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.cc b/chrome
  
    SanityCheck();
  }
-@@ -472,6 +649,7 @@
+@@ -469,6 +645,7 @@ void ExtensionsMenuView::OnToolbarActionRemoved(
  void ExtensionsMenuView::OnToolbarActionUpdated(
      const ToolbarActionsModel::ActionId& action_id) {
    Update();
@@ -877,6 +902,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.cc b/chrome
  
  void ExtensionsMenuView::OnToolbarModelInitialized() {
 diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.h b/chrome/browser/ui/views/extensions/extensions_menu_view.h
+index d632239a4ff31..7d9f81072db3e 100644
 --- a/chrome/browser/ui/views/extensions/extensions_menu_view.h
 +++ b/chrome/browser/ui/views/extensions/extensions_menu_view.h
 @@ -18,12 +18,15 @@
@@ -895,10 +921,12 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.h b/chrome/
  class View;
  }  // namespace views
  
-@@ -133,6 +136,15 @@
+@@ -132,6 +135,17 @@ class ExtensionsMenuView : public views::BubbleDialogDelegateView,
  
    std::unique_ptr<views::View> CreateExtensionButtonsContainer();
  
++  // Creates and updates the quick manager for enabling/disabling installed
++  // extensions without opening chrome://extensions.
 +  std::unique_ptr<views::View> CreateQuickToggleSection();
 +  void UpdateExtensionQuickToggles();
 +  void RefreshLayoutAfterMenuItemsChanged();
@@ -911,7 +939,7 @@ diff --git a/chrome/browser/ui/views/extensions/extensions_menu_view.h b/chrome/
    // Returns the appropriate section for the given `site_interaction`.
    Section* GetSectionForSiteInteraction(
        extensions::SitePermissionsHelper::SiteInteraction site_interaction);
-@@ -171,6 +183,11 @@
+@@ -170,6 +184,11 @@ class ExtensionsMenuView : public views::BubbleDialogDelegateView,
        extensions_menu_items_;
  
    raw_ptr<views::LabelButton> manage_extensions_button_ = nullptr;

@@ -17,5 +17,4 @@ pure-black-theme.patch
 fix-extension-remove-crash.patch
 enable-android-devtools.patch
 devtools-open-in-new-tab.patch
-fix-extension-proxy-auth.patch
 extension-new-tab-override.patch

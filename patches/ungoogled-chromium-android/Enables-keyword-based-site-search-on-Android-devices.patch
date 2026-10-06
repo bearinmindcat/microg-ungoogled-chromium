@@ -1,20 +1,30 @@
+diff --git a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java b/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
 --- a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
 +++ b/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
-@@ -84,11 +84,6 @@
+@@ -33,7 +33,6 @@
+ import org.chromium.components.omnibox.OmniboxUrlEmphasizer.UrlEmphasisSpan;
+ import org.chromium.components.omnibox.TextSelection;
+ import org.chromium.ui.base.Clipboard;
+-import org.chromium.ui.base.DeviceFormFactor;
+ import org.chromium.ui.modelutil.PropertyModel;
+ import org.chromium.url.GURL;
+ 
+@@ -87,11 +86,6 @@
          mModel.set(UrlBarProperties.RICH_TEXT_CHANGE_LISTENER, this::onRichTextChanged);
          mModel.set(UrlBarProperties.KEY_DOWN_LISTENER, keyDownListener);
          mModel.set(UrlBarProperties.SHOW_HINT_TEXT, true);
--        if (OmniboxFeatures.sOmniboxSiteSearch.isEnabled()) {
+-        if (DeviceFormFactor.isNonMultiDisplayContextOnTablet(context)) {
 -            mModel.set(
 -                    UrlBarProperties.MANAGE_SEARCH_ENGINES_CALLBACK,
--                    this::onManageSiteSearchClicked);
+-                    this::onManageSearchEnginesClicked);
 -        }
          setBrandedColorScheme(BrandedColorScheme.APP_DEFAULT);
          pushTextToModel(/* originChanged= */ false);
      }
+diff --git a/components/omnibox/common/android/java/src/org/chromium/components/omnibox/OmniboxFeatures.java b/components/omnibox/common/android/java/src/org/chromium/components/omnibox/OmniboxFeatures.java
 --- a/components/omnibox/common/android/java/src/org/chromium/components/omnibox/OmniboxFeatures.java
 +++ b/components/omnibox/common/android/java/src/org/chromium/components/omnibox/OmniboxFeatures.java
-@@ -134,7 +134,7 @@ public class OmniboxFeatures {
+@@ -147,7 +147,7 @@
              newFlag(OmniboxFeatureList.POST_DELAYED_TASK_FOCUS_TAB, FeatureState.ENABLED_IN_PROD);
  
      public static final CachedFlag sOmniboxSiteSearch =
@@ -23,9 +33,10 @@
  
      public static final CachedFlag sStarterPackExpansion =
              newFlag(OmniboxFeatureList.STARTER_PACK_EXPANSION, FeatureState.ENABLED_IN_PROD);
+diff --git a/components/omnibox/common/omnibox_features.cc b/components/omnibox/common/omnibox_features.cc
 --- a/components/omnibox/common/omnibox_features.cc
 +++ b/components/omnibox/common/omnibox_features.cc
-@@ -295,7 +295,7 @@ BASE_FEATURE(kOmniboxTouchDownTriggerFor
+@@ -360,7 +360,7 @@
  BASE_FEATURE(kOmniboxSearchPrefetchOnEnterKeyDown, DISABLED);
  
  // Enables keyword-based site search functionality on Android devices.

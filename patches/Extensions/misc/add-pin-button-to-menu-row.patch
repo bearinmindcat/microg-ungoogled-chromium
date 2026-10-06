@@ -1,7 +1,7 @@
 diff --git a/chrome/browser/ui/android/extensions/BUILD.gn b/chrome/browser/ui/android/extensions/BUILD.gn
 --- a/chrome/browser/ui/android/extensions/BUILD.gn
 +++ b/chrome/browser/ui/android/extensions/BUILD.gn
-@@ -262,6 +262,7 @@
+@@ -264,6 +264,7 @@
      "java/res/drawable/extensions_menu_button_bg.xml",
      "java/res/drawable/extensions_menu_containment.xml",
      "java/res/drawable/extensions_menu_context_menu_icon_selector.xml",
@@ -12,7 +12,7 @@ diff --git a/chrome/browser/ui/android/extensions/BUILD.gn b/chrome/browser/ui/a
 diff --git a/chrome/browser/ui/android/extensions/extensions_toolbar_android.cc b/chrome/browser/ui/android/extensions/extensions_toolbar_android.cc
 --- a/chrome/browser/ui/android/extensions/extensions_toolbar_android.cc
 +++ b/chrome/browser/ui/android/extensions/extensions_toolbar_android.cc
-@@ -399,6 +399,15 @@
+@@ -418,6 +418,15 @@
    toolbar_view_model_->MovePinnedAction(action_id, target_index);
  }
  
@@ -31,7 +31,7 @@ diff --git a/chrome/browser/ui/android/extensions/extensions_toolbar_android.cc 
 diff --git a/chrome/browser/ui/android/extensions/extensions_toolbar_android.h b/chrome/browser/ui/android/extensions/extensions_toolbar_android.h
 --- a/chrome/browser/ui/android/extensions/extensions_toolbar_android.h
 +++ b/chrome/browser/ui/android/extensions/extensions_toolbar_android.h
-@@ -96,6 +96,7 @@
+@@ -99,6 +99,7 @@
                                      content::WebContents* web_contents);
    void MovePinnedAction(const ToolbarActionsModel::ActionId& action_id,
                          int target_index);
@@ -85,7 +85,7 @@ diff --git a/chrome/browser/ui/android/extensions/java/res/layout/extensions_men
 diff --git a/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsToolbarBridge.java b/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsToolbarBridge.java
 --- a/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsToolbarBridge.java
 +++ b/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/browser/ui/extensions/ExtensionsToolbarBridge.java
-@@ -196,6 +196,15 @@
+@@ -249,6 +249,15 @@
                  .movePinnedAction(Instance().mNativeExtensionsToolbarAndroid, actionId, targetIndex);
      }
  
@@ -100,8 +100,8 @@ diff --git a/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/b
 +
      public void onRequestAccessButtonClicked(WebContents webContents) {
          assert Instance().mNativeExtensionsToolbarAndroid != 0;
-         ExtensionsToolbarBridgeJni.get()
-@@ -451,6 +460,10 @@
+         if (getActiveProfile().shutdownStarted()) {
+@@ -518,6 +527,10 @@
                  @JniType("std::string") String actionId,
                  int targetIndex);
  
@@ -115,7 +115,7 @@ diff --git a/chrome/browser/ui/android/extensions/java/src/org/chromium/chrome/b
 diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemProperties.java b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemProperties.java
 --- a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemProperties.java
 +++ b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuItemProperties.java
-@@ -37,6 +37,9 @@
+@@ -38,6 +38,9 @@
      public static final WritableObjectPropertyKey<View.OnClickListener>
              CONTEXT_MENU_BUTTON_ON_CLICK = new WritableObjectPropertyKey<>();
  
@@ -125,7 +125,7 @@ diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/brow
      public static final WritableObjectPropertyKey<View.OnClickListener> PRIMARY_ACTION_ON_CLICK =
              new WritableObjectPropertyKey<>();
  
-@@ -78,6 +81,7 @@
+@@ -79,6 +82,7 @@
                  TITLE,
                  CONTEXT_MENU_BUTTON_ACCESSIBLE_NAME,
                  CONTEXT_MENU_BUTTON_ON_CLICK,
@@ -156,7 +156,7 @@ diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/brow
 diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java
 --- a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java
 +++ b/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsMenuMediator.java
-@@ -47,6 +47,7 @@
+@@ -48,6 +48,7 @@
      private final Context mContext;
      private final NullableObservableSupplier<Tab> mCurrentTabSupplier;
      private final ExtensionsMenuBridge mMenuBridge;
@@ -164,7 +164,7 @@ diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/brow
      private final PropertyModel mMainPageModel;
      private final PropertyModel mSitePermissionsPageModel;
      private final Runnable mOnReady;
-@@ -91,6 +92,7 @@
+@@ -93,6 +94,7 @@
          mOpenUrlInCustomTab = openUrlInCustomTab;
          mTabCreator = tabCreator;
          mTask = task;
@@ -172,7 +172,7 @@ diff --git a/chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/brow
          mMenuBridge = ExtensionsMenuBridge.Instance();
          mMenuBridge.setObserver(mTask, /* observer= */ this);
  
-@@ -415,6 +417,9 @@
+@@ -424,6 +426,9 @@
                          .with(
                                  ExtensionsMenuItemProperties.SITE_PERMISSIONS_BUTTON_ON_CLICK,
                                  (view) -> onSitePermissionsButtonClicked(entry.id))

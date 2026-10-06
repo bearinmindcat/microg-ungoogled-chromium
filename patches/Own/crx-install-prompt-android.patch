@@ -1,7 +1,7 @@
 diff --git a/chrome/browser/download/download_crx_util.cc b/chrome/browser/download/download_crx_util.cc
 --- a/chrome/browser/download/download_crx_util.cc
 +++ b/chrome/browser/download/download_crx_util.cc
-@@ -26,6 +26,11 @@
+@@ -27,6 +27,11 @@
  #include "extensions/common/extension_urls.h"
  #include "extensions/common/user_script.h"
  
@@ -11,9 +11,9 @@ diff --git a/chrome/browser/download/download_crx_util.cc b/chrome/browser/downl
 +#endif
 +
  #if !BUILDFLAG(IS_ANDROID)
- #include "chrome/browser/ui/browser.h"
- #endif
-@@ -62,6 +67,16 @@
+ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+ #include "chrome/browser/ui/browser_window/public/create_browser_window.h"
+@@ -64,6 +69,16 @@
    content::WebContents* web_contents =
        content::DownloadItemUtils::GetWebContents(
            const_cast<DownloadItem*>(&download_item));

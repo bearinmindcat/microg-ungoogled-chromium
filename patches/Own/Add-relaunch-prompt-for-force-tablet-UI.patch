@@ -3,6 +3,7 @@ subject: Add relaunch prompt for force tablet UI
 Force tablet UI is only read at startup, so offer to relaunch when it is toggled.
 Extends Cromite's Add-option-to-force-tablet-UI, which does not prompt.
 ---
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java b/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java
 --- a/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java
 @@ -4,14 +4,22 @@
@@ -28,7 +29,7 @@ Extends Cromite's Add-option-to-force-tablet-UI, which does not prompt.
  import org.chromium.components.browser_ui.accessibility.AccessibilitySettingsDelegate;
  import org.chromium.components.browser_ui.settings.SettingsNavigation;
  import org.chromium.components.dom_distiller.core.DistilledPagePrefs;
-@@ -82,6 +90,27 @@ public class ChromeAccessibilitySettings
+@@ -82,6 +90,27 @@
          return new ForceTabletUIDelegate();
      }
  
@@ -56,9 +57,10 @@ Extends Cromite's Add-option-to-force-tablet-UI, which does not prompt.
      private final Profile mProfile;
  
      /**
+diff --git a/chrome/browser/ui/android/strings/android_chrome_strings.grd b/chrome/browser/ui/android/strings/android_chrome_strings.grd
 --- a/chrome/browser/ui/android/strings/android_chrome_strings.grd
 +++ b/chrome/browser/ui/android/strings/android_chrome_strings.grd
-@@ -632,6 +632,12 @@ For more settings that use data to impro
+@@ -635,6 +635,12 @@
        <message name="IDS_FORCE_TABLET_UI_TITLE" desc="Title of the preference that allows the user to update force tablet UI settings.">
          Force Tablet Mode
        </message>
@@ -71,17 +73,18 @@ Extends Cromite's Add-option-to-force-tablet-UI, which does not prompt.
  
        <!-- Add Message -->
  
+diff --git a/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettings.java b/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettings.java
 --- a/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettings.java
 +++ b/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettings.java
-@@ -297,7 +297,7 @@ public class AccessibilitySettings exten
+@@ -297,6 +297,7 @@
              mDelegate.getForceEnableZoomAccessibilityDelegate().setValue((Boolean) newValue);
          } else if (PREF_FORCE_TABLET_UI.equals(preference.getKey())) {
              mForceTabletUIDelegate.setValue((Boolean) newValue);
--            // Force-tablet takes effect on next app launch (no immediate restart at 150).
 +            mDelegate.requestRestart(getActivity());
          } else if (PREF_READER_FOR_ACCESSIBILITY.equals(preference.getKey())) {
              boolean readerModeEnabled = (Boolean) newValue;
              mDelegate.getReaderAccessibilityDelegate().setValue(readerModeEnabled);
+diff --git a/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettingsDelegate.java b/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettingsDelegate.java
 --- a/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettingsDelegate.java
 +++ b/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettingsDelegate.java
 @@ -4,6 +4,8 @@

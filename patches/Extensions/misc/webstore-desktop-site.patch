@@ -1,7 +1,7 @@
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java b/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java
 --- a/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java
-@@ -131,6 +131,7 @@
+@@ -134,6 +134,7 @@
  import org.chromium.chrome.browser.data_sharing.ui.versioning.VersioningMessageBanner;
  import org.chromium.chrome.browser.device.DeviceClassManager;
  import org.chromium.chrome.browser.device_lock.DeviceLockActivityLauncherImpl;
@@ -9,7 +9,7 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedAct
  import org.chromium.chrome.browser.download.DownloadNotificationService;
  import org.chromium.chrome.browser.download.DownloadOpenSource;
  import org.chromium.chrome.browser.download.DownloadUtils;
-@@ -1624,10 +1625,31 @@
+@@ -1644,11 +1645,32 @@
          }
      }
  
@@ -35,16 +35,17 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedAct
      @Override
      public void finishNativeInitialization() {
          try (TraceEvent te = TraceEvent.scoped("ChromeTabbedActivity.finishNativeInitialization")) {
-             assert getProfileProviderSupplier().get() != null;
+             var profileProvider = assertNonNull(getProfileProviderSupplier().get());
+             var profile = profileProvider.getOriginalProfile();
 +            maybeSeedWebstoreDesktopSiteException(
 +                    getProfileProviderSupplier().get().getOriginalProfile());
-             new NavigationPredictorBridge(
-                     getProfileProviderSupplier().get().getOriginalProfile(),
-                     getLifecycleDispatcher(),
+             new NavigationPredictorBridge(profile, getLifecycleDispatcher(), this::isWarmOnResume);
+ 
+             if (NtpCustomizationUtils.isNtpThemeCustomizationEnabled() && !isIncognitoWindow()) {
 diff --git a/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java b/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
 --- a/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
 +++ b/chrome/browser/preferences/android/java/src/org/chromium/chrome/browser/preferences/ChromePreferenceKeys.java
-@@ -382,6 +382,9 @@
+@@ -383,6 +383,9 @@
      public static final String DEVICE_LOCK_SHOW_ALERT_IF_REMOVED =
              "Chrome.DeviceLock.ShowAlertIfRemoved";
  
@@ -54,10 +55,10 @@ diff --git a/chrome/browser/preferences/android/java/src/org/chromium/chrome/bro
      public static final String DOWNLOAD_AUTO_RESUMPTION_ATTEMPT_LEFT = "ResumptionAttemptLeft";
      public static final String DOWNLOAD_FOREGROUND_SERVICE_OBSERVERS = "ForegroundServiceObservers";
      public static final String DOWNLOAD_IS_DOWNLOAD_HOME_ENABLED =
-@@ -1390,6 +1393,7 @@
-                 VERTICAL_TABS_COLLAPSED,
+@@ -1400,6 +1403,7 @@
                  VERTICAL_TABS_ENABLED,
                  VERTICAL_TABS_ENABLED_TIMESTAMP,
+                 VERTICAL_TABS_LAYOUT_TOGGLE_VIEW_COUNT,
 +                WEBSTORE_DESKTOP_SITE_SEEDED,
                  WEB_SIGNIN_ACCOUNT_PICKER_ACTIVE_DISMISSAL_COUNT,
                  WINDOW_CONTROLS_OVERLAY_ENABLED_PACKAGES);

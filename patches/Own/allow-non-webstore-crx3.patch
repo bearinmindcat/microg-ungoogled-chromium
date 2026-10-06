@@ -1,15 +1,15 @@
 diff --git a/components/crx_file/crx_verifier.cc b/components/crx_file/crx_verifier.cc
 --- a/components/crx_file/crx_verifier.cc
 +++ b/components/crx_file/crx_verifier.cc
-@@ -9,6 +9,7 @@
+@@ -11,6 +11,7 @@
  #include <cstring>
  #include <iterator>
  #include <memory>
 +#include <tuple>
  #include <optional>
  #include <set>
- #include <utility>
-@@ -210,9 +211,8 @@
+ #include <string>
+@@ -242,9 +243,8 @@
      return VerifierResult::ERROR_REQUIRED_PROOF_MISSING;
    }
  
