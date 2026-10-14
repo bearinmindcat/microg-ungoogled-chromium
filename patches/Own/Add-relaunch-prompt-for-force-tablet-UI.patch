@@ -6,14 +6,15 @@ Extends Cromite's Add-option-to-force-tablet-UI, which does not prompt.
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java b/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java
 --- a/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/accessibility/settings/ChromeAccessibilitySettingsDelegate.java
-@@ -4,14 +4,22 @@
+@@ -4,17 +4,23 @@
  
  package org.chromium.chrome.browser.accessibility.settings;
  
 +import android.app.Activity;
-+
+ import android.content.Context;
+ 
  import org.chromium.build.annotations.NullMarked;
-+import org.chromium.build.annotations.Nullable;
+ import org.chromium.build.annotations.Nullable;
 +import org.chromium.chrome.R;
  import org.chromium.chrome.browser.dom_distiller.DomDistillerServiceFactory;
 +import org.chromium.chrome.browser.lifetime.ApplicationLifetime;
@@ -29,7 +30,7 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/accessibility/s
  import org.chromium.components.browser_ui.accessibility.AccessibilitySettingsDelegate;
  import org.chromium.components.browser_ui.settings.SettingsNavigation;
  import org.chromium.components.dom_distiller.core.DistilledPagePrefs;
-@@ -82,6 +90,27 @@
+@@ -85,6 +91,27 @@
          return new ForceTabletUIDelegate();
      }
  
@@ -54,13 +55,13 @@ diff --git a/chrome/android/java/src/org/chromium/chrome/browser/accessibility/s
 +        manager.showSnackbar(snackbar);
 +    }
 +
+     private final @Nullable Context mContext;
      private final Profile mProfile;
  
-     /**
 diff --git a/chrome/browser/ui/android/strings/android_chrome_strings.grd b/chrome/browser/ui/android/strings/android_chrome_strings.grd
 --- a/chrome/browser/ui/android/strings/android_chrome_strings.grd
 +++ b/chrome/browser/ui/android/strings/android_chrome_strings.grd
-@@ -635,6 +635,12 @@
+@@ -641,6 +641,12 @@
        <message name="IDS_FORCE_TABLET_UI_TITLE" desc="Title of the preference that allows the user to update force tablet UI settings.">
          Force Tablet Mode
        </message>
@@ -87,16 +88,15 @@ diff --git a/components/browser_ui/accessibility/android/java/src/org/chromium/c
 diff --git a/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettingsDelegate.java b/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettingsDelegate.java
 --- a/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettingsDelegate.java
 +++ b/components/browser_ui/accessibility/android/java/src/org/chromium/components/browser_ui/accessibility/AccessibilitySettingsDelegate.java
-@@ -4,6 +4,8 @@
+@@ -4,6 +4,7 @@
  
  package org.chromium.components.browser_ui.accessibility;
  
 +import android.app.Activity;
-+
+ import android.content.Context;
+ 
  import org.chromium.build.annotations.NullMarked;
- import org.chromium.build.annotations.Nullable;
- import org.chromium.components.browser_ui.settings.SettingsNavigation;
-@@ -45,6 +47,8 @@
+@@ -47,6 +48,8 @@
  
      BooleanPreferenceDelegate getForceTabletUIDelegate();
  

@@ -6,7 +6,7 @@ as empty on kEnableReconcile so microG accounts get a Multilogin.
 diff --git a/components/signin/core/browser/account_reconcilor.cc b/components/signin/core/browser/account_reconcilor.cc
 --- a/components/signin/core/browser/account_reconcilor.cc
 +++ b/components/signin/core/browser/account_reconcilor.cc
-@@ -431,7 +431,8 @@
+@@ -430,7 +430,8 @@
  
    // In the case of a forced reconciliation, we will not rely on ListAccounts,
    // and consider the cookie jar to be empty.
@@ -19,20 +19,22 @@ diff --git a/components/signin/core/browser/account_reconcilor.cc b/components/s
 diff --git a/components/signin/internal/identity_manager/account_tracker_service.cc b/components/signin/internal/identity_manager/account_tracker_service.cc
 --- a/components/signin/internal/identity_manager/account_tracker_service.cc
 +++ b/components/signin/internal/identity_manager/account_tracker_service.cc
-@@ -301,11 +301,16 @@
-       PickAccountIdForAccount(fetched_user_info.gaia, fetched_user_info.email);
+@@ -316,11 +316,18 @@
  
    // Whether the existing account in pref matches the fetched account.
--  bool accounts_matching = user_info_copy.account_id == account_info.account_id;
-+  bool accounts_matching =
-+      user_info_copy.account_id == account_info.account_id ||
-+      (user_info_copy.email == account_info.email && !account_info.email.empty());
+   bool accounts_matching =
+-      user_info_copy.GetAccountId() == account_info.GetAccountId();
++      user_info_copy.GetAccountId() == account_info.GetAccountId() ||
++      (user_info_copy.GetEmail() == account_info.GetEmail() &&
++       !account_info.GetEmail().empty());
    base::UmaHistogramBoolean("Signin.AccountInPref.MatchingFetchedAccount",
                              accounts_matching);
  
    if (accounts_matching) {
-+    if (user_info_copy.account_id != account_info.account_id) {
-+      user_info_copy.account_id = account_info.account_id;
++    if (user_info_copy.GetAccountId() != account_info.GetAccountId()) {
++      user_info_copy = AccountInfo::Builder(user_info_copy)
++                           .SetAccountId(account_info.GetAccountId())
++                           .Build();
 +    }
      account_info.UpdateWith(user_info_copy);
    } else {

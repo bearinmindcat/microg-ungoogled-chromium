@@ -1,7 +1,7 @@
 diff --git a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java b/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
 --- a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
 +++ b/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/UrlBarMediator.java
-@@ -33,7 +33,6 @@
+@@ -35,7 +35,6 @@
  import org.chromium.components.omnibox.OmniboxUrlEmphasizer.UrlEmphasisSpan;
  import org.chromium.components.omnibox.TextSelection;
  import org.chromium.ui.base.Clipboard;
@@ -9,9 +9,9 @@ diff --git a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/brow
  import org.chromium.ui.modelutil.PropertyModel;
  import org.chromium.url.GURL;
  
-@@ -87,11 +86,6 @@
+@@ -88,11 +87,6 @@
+         mModel.set(UrlBarProperties.TEXT_CHANGE_LISTENER, this::onTextChanged);
          mModel.set(UrlBarProperties.RICH_TEXT_CHANGE_LISTENER, this::onRichTextChanged);
-         mModel.set(UrlBarProperties.KEY_DOWN_LISTENER, keyDownListener);
          mModel.set(UrlBarProperties.SHOW_HINT_TEXT, true);
 -        if (DeviceFormFactor.isNonMultiDisplayContextOnTablet(context)) {
 -            mModel.set(
@@ -36,7 +36,7 @@ diff --git a/components/omnibox/common/android/java/src/org/chromium/components/
 diff --git a/components/omnibox/common/omnibox_features.cc b/components/omnibox/common/omnibox_features.cc
 --- a/components/omnibox/common/omnibox_features.cc
 +++ b/components/omnibox/common/omnibox_features.cc
-@@ -360,7 +360,7 @@
+@@ -369,7 +369,7 @@
  BASE_FEATURE(kOmniboxSearchPrefetchOnEnterKeyDown, DISABLED);
  
  // Enables keyword-based site search functionality on Android devices.

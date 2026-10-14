@@ -20,23 +20,23 @@ diff --git a/chrome/browser/extensions/api/BUILD.gn b/chrome/browser/extensions/
 diff --git a/chrome/browser/extensions/api/api_browser_context_keyed_service_factories.cc b/chrome/browser/extensions/api/api_browser_context_keyed_service_factories.cc
 --- a/chrome/browser/extensions/api/api_browser_context_keyed_service_factories.cc
 +++ b/chrome/browser/extensions/api/api_browser_context_keyed_service_factories.cc
-@@ -29,6 +29,7 @@
+@@ -31,6 +31,7 @@
  
  // The following are not supported in the experimental desktop-android build.
  // TODO(https://crbug.com/356905053): Enable these APIs on desktop-android.
 +#include "chrome/browser/extensions/api/settings_overrides/settings_overrides_api.h"
  #if BUILDFLAG(ENABLE_EXTENSIONS)
- #include "build/build_config.h"
  #include "build/chromeos_buildflags.h"
-@@ -42,7 +43,6 @@
+ #include "chrome/browser/extensions/api/activity_log_private/activity_log_private_api.h"
+@@ -43,7 +44,6 @@
  #include "chrome/browser/extensions/api/networking_private/networking_private_ui_delegate_factory_impl.h"
  #include "chrome/browser/extensions/api/passwords_private/passwords_private_delegate_factory.h"
  #include "chrome/browser/extensions/api/passwords_private/passwords_private_event_router_factory.h"
 -#include "chrome/browser/extensions/api/settings_overrides/settings_overrides_api.h"
  #include "chrome/browser/extensions/api/settings_private/settings_private_event_router_factory.h"
- #include "chrome/browser/extensions/api/side_panel/side_panel_service.h"
  #include "components/safe_browsing/buildflags.h"
-@@ -106,6 +106,7 @@
+ #include "extensions/browser/api/networking_private/networking_private_delegate_factory.h"
+@@ -107,6 +107,7 @@
    extensions::TabsWindowsAPI::GetFactoryInstance();
    extensions::WebNavigationAPI::GetFactoryInstance();
  
@@ -44,14 +44,14 @@ diff --git a/chrome/browser/extensions/api/api_browser_context_keyed_service_fac
  #if BUILDFLAG(ENABLE_EXTENSIONS)
    extensions::ActivityLogAPI::GetFactoryInstance();
    extensions::AutofillPrivateEventRouterFactory::GetInstance();
-@@ -138,7 +139,6 @@
+@@ -139,7 +140,6 @@
    extensions::SafeBrowsingPrivateEventRouterFactory::GetInstance();
  #endif
    extensions::SettingsPrivateEventRouterFactory::GetInstance();
 -  extensions::SettingsOverridesAPI::GetFactoryInstance();
-   extensions::SidePanelService::GetFactoryInstance();
  #if BUILDFLAG(IS_CHROMEOS)
    extensions::TerminalPrivateAPI::GetFactoryInstance();
+   extensions::VerifyTrustApiService::GetFactoryInstance();
 diff --git a/chrome/browser/extensions/api/settings_overrides/BUILD.gn b/chrome/browser/extensions/api/settings_overrides/BUILD.gn
 --- a/chrome/browser/extensions/api/settings_overrides/BUILD.gn
 +++ b/chrome/browser/extensions/api/settings_overrides/BUILD.gn

@@ -1,4 +1,5 @@
 enable-extensions-by-default.patch
+disable-gemini-by-default.patch
 enable-crx-install-by-default.patch
 fix-unpinned-extensions-menu.patch
 desktop-layout-for-extensions-page.patch

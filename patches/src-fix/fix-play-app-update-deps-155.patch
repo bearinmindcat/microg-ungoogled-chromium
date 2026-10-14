@@ -1,0 +1,43 @@
+author: bearinmindcat <bearincrypto@gmail.com>
+
+--- a/third_party/android_deps/BUILD.gn
++++ b/third_party/android_deps/BUILD.gn
+@@ -109,10 +109,6 @@ if (!limit_android_deps) {
+     preferred_dep = true
+     if (defined(playcore_app_update_target)) {
+       deps = [ playcore_app_update_target ]
+-    } else {
+-      deps = [
+-        "//third_party/android_deps:com_google_android_play_app_update_java",
+-      ]
+     }
+   }
+ 
+--- a/third_party/android_deps/autorolled/BUILD.gn
++++ b/third_party/android_deps/autorolled/BUILD.gn
+@@ -114,25 +114,6 @@ template("define_autorolled_targets") {
+ 
+     # This is generated, do not edit. Update BuildConfigGenerator.groovy
+     # instead.
+-    if (!defined(playcore_app_update_target)) {
+-      android_aar_prebuilt("com_google_android_play_app_update_java") {
+-        aar_path = "autorolled/cipd/libs/com_google_android_play_app_update/app-update.aar"
+-        info_path = "autorolled/committed/libs/com_google_android_play_app_update/com_google_android_play_app_update.info"
+-        enable_bytecode_checks = false
+-
+-        # Target is swapped out when internal code is enabled. Please depend on
+-        # //third_party/android_deps:playcore_app_update_java instead.
+-        visibility = [ "//third_party/android_deps:*" ]
+-        deps = [
+-          "$google_play_services_package:google_play_services_basement_java",
+-          "$google_play_services_package:google_play_services_tasks_java",
+-          "//third_party/android_deps:com_google_android_play_core_common_java",
+-        ]
+-      }
+-    }
+-
+-    # This is generated, do not edit. Update BuildConfigGenerator.groovy
+-    # instead.
+     android_aar_prebuilt("com_google_ar_impress_java") {
+       aar_path = "autorolled/cipd/libs/com_google_ar_impress/impress.aar"
+       info_path = "autorolled/committed/libs/com_google_ar_impress/com_google_ar_impress.info"

@@ -3,11 +3,11 @@ subject: Add microG trusted vault backend
 Provide a TrustedVault backend so sync encryption works without Play Services, and
 suppress the "Verify it's you" prompt microG cannot satisfy.
 ---
-diff --git a/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java b/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java
+diff --git a/chrome/browser/sync/android/java/src/org/chromium/chrome/browser/sync/SyncSettingsUtils.java b/chrome/browser/sync/android/java/src/org/chromium/chrome/browser/sync/SyncSettingsUtils.java
 index f871db046ef1f..c56ee98599785 100644
---- a/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java
-+++ b/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/SyncSettingsUtils.java
-@@ -93,12 +93,7 @@ public class SyncSettingsUtils {
+--- a/chrome/browser/sync/android/java/src/org/chromium/chrome/browser/sync/SyncSettingsUtils.java
++++ b/chrome/browser/sync/android/java/src/org/chromium/chrome/browser/sync/SyncSettingsUtils.java
+@@ -85,12 +85,7 @@ public class SyncSettingsUtils {
  
      /** Returns the type of the sync error */
      public static @UserActionableError int getSyncError(@Nullable Profile profile) {
