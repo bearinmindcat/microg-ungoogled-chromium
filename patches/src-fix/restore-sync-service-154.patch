@@ -1,30 +1,27 @@
 author: bearinmindcat <bearincrypto@gmail.com>
 
---- a/chrome/browser/sync/chrome_sync_controller_builder.cc
-+++ b/chrome/browser/sync/chrome_sync_controller_builder.cc
-@@ -200,19 +200,6 @@
-   syncer::RepeatingDataTypeStoreFactory data_type_store_factory =
-       data_type_store_service_.value()->GetStoreFactory();
- 
--    syncer::DataTypeControllerDelegate* security_events_delegate =
--        security_event_recorder_.value()->GetControllerDelegate().get();
--    // Forward both full-sync and transport-only modes to the same delegate,
--    // since behavior for SECURITY_EVENTS does not differ.
--    controllers.push_back(std::make_unique<syncer::DataTypeController>(
--        syncer::SECURITY_EVENTS,
--        /*delegate_for_full_sync_mode=*/
--        std::make_unique<syncer::ForwardingDataTypeControllerDelegate>(
--            security_events_delegate),
--        /*delegate_for_transport_mode=*/
--        std::make_unique<syncer::ForwardingDataTypeControllerDelegate>(
--            security_events_delegate)));
--
- #if BUILDFLAG(ENABLE_EXTENSIONS_CORE)
-     if (extension_sync_service_.value()) {
-       // TODO(crbug.com/425381293): Add an ExtensionLocalDataBatchUploader once
+--- a/chrome/browser/safe_browsing/BUILD.gn
++++ b/chrome/browser/safe_browsing/BUILD.gn
+@@ -128,6 +128,7 @@ static_library("safe_browsing") {
+   if (is_android) {
+     deps += [
+       "//chrome/browser/password_manager/android:utils",
++      "//chrome/browser/security_events",
+       "//chrome/browser/ui/android/safe_browsing",
+       "//chrome/browser/ui/android/tab_model",
+       "//components/safe_browsing/android:safe_browsing_api_handler",
 --- a/chrome/browser/sync/sync_service_factory.cc
 +++ b/chrome/browser/sync/sync_service_factory.cc
-@@ -396,7 +396,114 @@
+@@ -298,6 +298,8 @@ syncer::DataTypeController::TypeVector C
+ 
+   builder.SetDataTypeStoreService(
+       DataTypeStoreServiceFactory::GetForProfile(profile));
++  builder.SetSecurityEventRecorder(
++      SecurityEventRecorderFactory::GetForProfile(profile));
+ 
+ #if BUILDFLAG(ENABLE_EXTENSIONS_CORE)
+   builder.SetExtensionSyncService(ExtensionSyncService::Get(profile));
+@@ -390,7 +392,114 @@ std::unique_ptr<KeyedService> BuildSyncS
      std::optional<syncer::CreateHttpPostProviderFactory>
          create_http_post_provider_factory_for_test,
      content::BrowserContext* context) {
@@ -139,3 +136,11 @@ author: bearinmindcat <bearincrypto@gmail.com>
  }
  
  }  // namespace
+@@ -461,6 +570,7 @@ SyncServiceFactory::SyncServiceFactory()
+   DependsOn(PasswordSenderServiceFactory::GetInstance());
+   DependsOn(ProfilePasswordStoreFactory::GetInstance());
+ 
++  DependsOn(SecurityEventRecorderFactory::GetInstance());
+   DependsOn(SendTabToSelfSyncServiceFactory::GetInstance());
+   DependsOn(SharingMessageBridgeFactory::GetInstance());
+ #if !BUILDFLAG(IS_ANDROID)
